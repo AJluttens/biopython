@@ -81,6 +81,25 @@ def page_sizes(size):
         raise ValueError, "%s not in list of page sizes" % size
 
 
+def _stroke_and_fill_colors(color, border):
+    """Helper function handle border and fill colors (PRIVATE)."""
+    if not isinstance(color, colors.Color):
+        raise ValueError("Invalid color %r" % color)
+
+    if color == colors.white and border is None:   # Force black border on
+        strokecolor = colors.black                 # white boxes with
+    elif border is None:                           # undefined border, else
+        strokecolor = color                        # use fill color
+    elif border:
+        if not isinstance(border, colors.Color):
+            raise ValueError("Invalid border color %r" % border)
+        strokecolor = border
+    else:
+        #e.g. False
+        strokecolor = None
+
+    return strokecolor, color
+
 def draw_box(point1, point2,
              color=colors.lightgreen, border=None, colour=None,
              **kwargs):
@@ -106,17 +125,7 @@ def draw_box(point1, point2,
         color = colour
         del colour
 
-    if not isinstance(color, colors.Color):
-        raise ValueError("Invalid color %s" % repr(color))
-    
-    if color == colors.white and border is None:   # Force black border on 
-        strokecolor = colors.black                 # white boxes with
-    elif border is None:                           # undefined border, else
-        strokecolor = color                        # use fill color
-    elif border is not None:
-        if not isinstance(border, colors.Color):
-            raise ValueError("Invalid border color %s" % repr(border))
-        strokecolor = border
+    strokecolor, color = _stroke_and_fill_colors(color, border)
 
     x1, y1, x2, y2 = min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)
     return Polygon([x1, y1, x2, y1, x2, y2, x1, y2],
@@ -125,6 +134,36 @@ def draw_box(point1, point2,
                    strokewidth=0,
                    **kwargs)
 
+def draw_cut_corner_box(point1, point2, corner=0.5,
+                        color=colors.lightgreen, border=None, **kwargs):
+    """Draw a box with the corners cut off."""
+    x1, y1 = point1
+    x2, y2 = point2
+
+    if not corner:
+        return draw_box(point1, point2, color, border)
+    elif corner < 0:
+        raise ValueError("Arrow head length ratio should be positive")
+
+    strokecolor, color = _stroke_and_fill_colors(color, border)
+
+    boxheight = y2-y1
+    boxwidth = x2-x1
+    corner = min(boxheight*0.5, boxheight*0.5*corner)
+
+    return Polygon([x1, y1+corner,
+                    x1, y2-corner,
+                    x1+corner, y2,
+                    x2-corner, y2,
+                    x2, y2-corner,
+                    x2, y1+corner,
+                    x2-corner, y1,
+                    x1+corner, y1],
+                   strokeColor=strokecolor,
+                   strokeWidth=1,
+                   strokeLineJoin=1, #1=round
+                   fillColor=color,
+                   **kwargs)
 
 def draw_polygon(list_of_points,
                  color=colors.lightgreen, border=None, colour=None,
@@ -144,12 +183,7 @@ def draw_polygon(list_of_points,
         color = colour
         del colour
 
-    if color == colors.white and border is None:   # Force black border on 
-        strokecolor = colors.black                 # white boxes with
-    elif border is None:                           # undefined border, else
-        strokecolor = color                        # use fill colour
-    elif border is not None:
-        strokecolor = border
+    strokecolor, color = _stroke_and_fill_colors(color, border)
 
     xy_list = []
     for (x,y) in list_of_points:
@@ -185,12 +219,7 @@ def draw_arrow(point1, point2, color=colors.lightgreen, border=None,
         color = colour
         del colour
 
-    if color == colors.white and border is None:   # Force black border on 
-        strokecolor = colors.black                 # white boxes with
-    elif border is None:                           # undefined border, else
-        strokecolor = color                        # use fill colour
-    elif border is not None:
-        strokecolor = border
+    strokecolor, color = _stroke_and_fill_colors(color, border)
 
     # Depending on the orientation, we define the bottom left (x1, y1) and
     # top right (x2, y2) coordinates differently, but still draw the box
@@ -337,10 +366,12 @@ class AbstractDrawer(object):
 
         o length        Size of sequence to be drawn
         
+        o cross_track_links List of tuples each with four entries (track A,
+                            feature A, track B, feature B) to be linked.
     """
     def __init__(self, parent, pagesize='A3', orientation='landscape',
                  x=0.05, y=0.05, xl=None, xr=None, yt=None, yb=None,
-                 start=None, end=None, tracklines=0):
+                 start=None, end=None, tracklines=0, cross_track_links=None):
         """ __init__(self, parent, pagesize='A3', orientation='landscape',
                  x=0.05, y=0.05, xl=None, xr=None, yt=None, yb=None,
                  start=None, end=None, tracklines=0)
@@ -381,6 +412,9 @@ class AbstractDrawer(object):
 
             o tracklines    Boolean flag to show (or not) lines delineating tracks
                             on the diagram            
+
+            o cross_track_links List of tuples each with four entries (track A,
+                                feature A, track B, feature B) to be linked.
         """
         self._parent = parent   # The calling Diagram object
 
@@ -389,6 +423,10 @@ class AbstractDrawer(object):
         self.set_margins(x, y, xl, xr, yt, yb)      # Set page margins
         self.set_bounds(start, end) # Set limits on what will be drawn
         self.tracklines = tracklines    # Set flags
+        if cross_track_links is None:
+            cross_track_links = []
+        else:
+            self.cross_track_links = cross_track_links
         
     def _set_xcentre(self, value):
         import warnings
@@ -483,9 +521,9 @@ class AbstractDrawer(object):
         if start is not None and end is not None and start > end:
             start, end = end, start
 
-        if start is None or start < 1:  # Check validity of passed args and 
-            start = 1   # default to 1
-        if end is None or end < 1:
+        if start is None or start < 0:  # Check validity of passed args and 
+            start = 0   # default to 0
+        if end is None or end < 0:
             end = high + 1  # default to track range top limit
         
         self.start, self.end = int(start), int(end)
@@ -511,5 +549,14 @@ class AbstractDrawer(object):
         """
         return self.length
         
-        
-    
+    def _current_track_start_end(self):        
+        track = self._parent[self.current_track_level]
+        if track.start is None:
+            start = self.start
+        else:
+            start = max(self.start, track.start)
+        if track.end is None:
+            end = self.end
+        else:
+            end = min(self.end, track.end)
+        return start, end

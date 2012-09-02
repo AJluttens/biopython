@@ -33,7 +33,8 @@ dna_alphas = [Alphabet.generic_dna]
 rna_alphas = [Alphabet.generic_rna]
 nucleotide_alphas = [Alphabet.generic_nucleotide,
                      Alphabet.Gapped(Alphabet.generic_nucleotide)]
-no_alpha_formats = ["fasta","clustal","phylip","phylip-relaxed","tab","ig",
+no_alpha_formats = ["fasta","clustal","phylip","phylip-relaxed",
+                    "phylip-sequential","tab","ig",
                     "stockholm","emboss", "fastq","fastq-solexa",
                     "fastq-illumina","qual"]
 possible_unknown_seq_formats = ["qual", "genbank", "gb", "embl", "imgt"]
@@ -157,7 +158,7 @@ test_files = [ \
     ("embl",   False, 'EMBL/A04195.imgt', 1), # features over indented for EMBL
     ("imgt",   False, 'EMBL/A04195.imgt', 1), # features over indented for EMBL
     ("stockholm", True,  'Stockholm/simple.sth', 2),
-    ("stockholm", True,  'Stockholm/funny.sth', 5),
+    ("stockholm", True,  'Stockholm/funny.sth', 6),
 #Following PHYLIP files are currently only used here and in test_AlignIO.py,
 #and are mostly from Joseph Felsenstein's PHYLIP v3.6 documentation:
     ("phylip", True,  'Phylip/reference_dna.phy', 6),
@@ -380,7 +381,7 @@ def check_simple_write_read(records, indent=" "):
                 assert r1.seq.tostring() == r2.seq.tostring()
             #Beware of different quirks and limitations in the
             #valid character sets and the identifier lengths!
-            if format=="phylip":
+            if format in ["phylip", "phylip-sequential"]:
                 assert r1.id.replace("[","").replace("]","")[:10] == r2.id, \
                        "'%s' vs '%s'" % (r1.id, r2.id)
             elif format=="phylip-relaxed":
@@ -534,11 +535,11 @@ for (t_format, t_alignment, t_filename, t_count) in test_files:
 
     # Check Bio.SeqIO.read(...)
     if t_count == 1:
-        record = SeqIO.read(handle=open(t_filename,mode), format=t_format)
+        record = SeqIO.read(t_filename, format=t_format)
         assert isinstance(record, SeqRecord)
     else:
         try:
-            record = SeqIO.read(open(t_filename), t_format)
+            record = SeqIO.read(t_filename, t_format)
             assert False, "Bio.SeqIO.read(...) should have failed"
         except ValueError:
             #Expected to fail
@@ -576,22 +577,28 @@ for (t_format, t_alignment, t_filename, t_count) in test_files:
     for given_alpha in good:
         #These should all work...
         given_base = Alphabet._get_base_alphabet(given_alpha)
-        for record in SeqIO.parse(open(t_filename,mode),t_format,given_alpha):
+        for record in SeqIO.parse(t_filename,t_format,given_alpha):
             base_alpha = Alphabet._get_base_alphabet(record.seq.alphabet)
             assert isinstance(base_alpha, given_base.__class__)
             assert base_alpha == given_base
         if t_count == 1:
-            record = SeqIO.read(open(t_filename,mode),t_format,given_alpha)
+            h = open(t_filename,mode)
+            record = SeqIO.read(h,t_format,given_alpha)
+            h.close()
             assert isinstance(base_alpha, given_base.__class__)
             assert base_alpha == given_base
     for given_alpha in bad:
         #These should all fail...
+        h = open(t_filename,mode)
         try:
-            print SeqIO.parse(open(t_filename,mode),t_format,given_alpha).next()
+            print SeqIO.parse(h,t_format,given_alpha).next()
+            h.close()
             assert False, "Forcing wrong alphabet, %s, should fail (%s)" \
                    % (repr(given_alpha), t_filename)
         except ValueError:
+            #Good - should fail
             pass
+        h.close()
     del good, bad, given_alpha, base_alpha
 
     if t_alignment:
@@ -599,7 +606,7 @@ for (t_format, t_alignment, t_filename, t_count) in test_files:
               % (t_format, t_filename)
 
         alignment = MultipleSeqAlignment(SeqIO.parse( \
-                    handle=open(t_filename,mode), format=t_format))
+                    handle=t_filename, format=t_format))
         assert len(alignment) == t_count
 
         alignment_len = alignment.get_alignment_length()
