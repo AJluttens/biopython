@@ -77,7 +77,7 @@ class Residue(Entity):
         PDBConstructionException if so.
         """
         atom_id=atom.get_id()
-        if self.has_id(atom_id):
+        if atom_id in self:
             raise PDBConstructionException( \
                 "Atom %s defined twice in residue %s" % (atom_id, self))
         Entity.add(self, atom)
@@ -157,7 +157,7 @@ class DisorderedResidue(DisorderedEntityWrapper):
         # add chain parent to residue
         chain=self.get_parent()
         residue.set_parent(chain)
-        assert(not self.disordered_has_id(resname))
+        assert(resname not in self)
         self[resname]=residue
         self.disordered_select(resname)
 

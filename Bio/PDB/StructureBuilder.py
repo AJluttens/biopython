@@ -44,16 +44,6 @@ class StructureBuilder(object):
     def set_header(self, header):
         self.header=header
 
-    def set_line_counter(self, line_counter):
-        """
-        The line counter keeps track of the line in the PDB file that 
-        is being parsed.
-        
-        Arguments:
-        o line_counter - int
-        """
-        self.line_counter=line_counter
-
     def init_structure(self, structure_id):
         """Initiate a new Structure object with given id.
 
@@ -78,7 +68,7 @@ class StructureBuilder(object):
         Arguments:
         o chain_id - string
         """
-        if self.model.has_id(chain_id):
+        if chain_id in self.model:
             self.chain=self.model[chain_id]
             warnings.warn("WARNING: Chain %s is discontinuous at line %i."
                           % (chain_id, self.line_counter),
@@ -86,14 +76,6 @@ class StructureBuilder(object):
         else:
             self.chain=Chain(chain_id)
             self.model.add(self.chain)
-
-    def init_seg(self, segid):
-        """Flag a change in segid.
-        
-        Arguments:
-        o segid - string
-        """
-        self.segid=segid
 
     def init_residue(self, resname, field, resseq, icode):
         """
@@ -106,13 +88,13 @@ class StructureBuilder(object):
         o resseq - int, sequence identifier
         o icode - string, insertion code
         """
+        res_id=(field, resseq, icode)
         if field!=" ":
             if field=="H":
                 # The hetero field consists of H_ + the residue name (e.g. H_FUC)
                 field="H_"+resname 
-        res_id=(field, resseq, icode) 
-        if field==" ":
-            if self.chain.has_id(res_id):
+        else:
+            if res_id in self.chain:
                 # There already is a residue with the id (field, resseq, icode).
                 # This only makes sense in the case of a point mutation.
                 warnings.warn("WARNING: Residue ('%s', %i, '%s') "
@@ -123,7 +105,7 @@ class StructureBuilder(object):
                 if duplicate_residue.is_disordered()==2:
                     # The residue in the chain is a DisorderedResidue object.
                     # So just add the last Residue object. 
-                    if duplicate_residue.disordered_has_id(resname):
+                    if resname in duplicate_residue:
                         # The residue was already made
                         self.residue=duplicate_residue
                         duplicate_residue.disordered_select(resname)
@@ -155,8 +137,7 @@ class StructureBuilder(object):
                     return
         residue=Residue(res_id, resname, self.segid)
         self.chain.add(residue)
-        self.residue=residue
-
+        self.residue=residue   
     def init_atom(self, name, coord, b_factor, occupancy, altloc, fullname,
                   serial_number=None, element=None):
         """
@@ -181,7 +162,7 @@ class StructureBuilder(object):
         # names that differ only in spaces (e.g. "CA.." and ".CA.",
         # where the dots are spaces). If that is so, use all spaces
         # in the atom name of the current atom. 
-        if residue.has_id(name):
+        if name in residue:
                 duplicate_atom=residue[name]
                 # atom name with spaces of duplicate atom
                 duplicate_fullname=duplicate_atom.get_fullname()
@@ -197,7 +178,7 @@ class StructureBuilder(object):
                             fullname, serial_number, element)
         if altloc!=" ":
             # The atom is disordered
-            if residue.has_id(name):
+            if name in residue:
                 # Residue already contains this atom
                 duplicate_atom=residue[name]
                 if duplicate_atom.is_disordered()==2:

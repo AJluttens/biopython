@@ -147,7 +147,7 @@ def _parse_pdb_header_list(header):
     last_src_key="misc"
     curTrans = -1 # Transformation Matrix (Biological Unit)
     
-    for hh in header:
+    for hh in header: 
         h=re.sub("[\s\n\r]*\Z","",hh) # chop linebreaks off
         #key=re.sub("\s.+\s*","",h)
         key = h[:6].strip()

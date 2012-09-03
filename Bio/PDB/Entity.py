@@ -81,7 +81,8 @@ class Entity(object):
     def add(self, entity):
         "Add a child to the Entity."
         entity_id=entity.get_id()
-        if self.has_id(entity_id):
+        # if self.has_id(entity_id):
+        if entity_id in self:
             raise PDBConstructionException( \
                 "%s defined twice" % str(entity_id))
         entity.set_parent(self)
@@ -91,7 +92,8 @@ class Entity(object):
     def insert(self, pos, entity):
         "Add a child to the Entity at a specified position."
         entity_id=entity.get_id()
-        if self.has_id(entity_id):
+        # if self.has_id(entity_id):
+        if entity_id in self:
             raise PDBConstructionException( \
                 "%s defined twice" % str(entity_id))
         entity.set_parent(self)
@@ -106,10 +108,10 @@ class Entity(object):
     def get_list(self):
         "Return a copy of the list of children."
         return copy(self.child_list)
-
-    def has_id(self, id):
-        """True if a child with given id exists."""
-        return (id in self.child_dict)
+    # 
+    # def has_id(self, id):
+    #     """True if a child with given id exists."""
+    #     return (id in self.child_dict)   
 
     def get_parent(self):
         "Return the parent Entity object."
@@ -240,9 +242,9 @@ class DisorderedEntityWrapper(object):
         "Return the id."
         return self.id
 
-    def disordered_has_id(self, id):
-        """True if there is an object present associated with this id."""
-        return (id in self.child_dict)
+    # def disordered_has_id(self, id):
+    #     """True if there is an object present associated with this id."""
+    #     return (id in self.child_dict)      
 
     def detach_parent(self):
         "Detach the parent"

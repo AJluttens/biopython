@@ -37,6 +37,10 @@ class Structure(Entity):
 
     # Public
 
+    def get_models(self): # Redundant, but for consistency
+        for m in self:
+            yield m
+
     def get_chains(self):
         for m in self:
             for c in m:

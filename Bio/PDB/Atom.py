@@ -73,7 +73,7 @@ class Atom(object):
         
     def _assign_element(self, element):
         """Tries to guess element from atom name if not recognised."""
-        if not element or element.capitalize() not in IUPACData.atom_weights:
+        if element not in IUPACData.atom_weights:
             # Inorganic elements have their name shifted left by one position 
             #  (is a convention in PDB, but not part of the standard).
             # isdigit() check on last two characters to avoid mis-assignment of 
@@ -88,22 +88,22 @@ class Atom(object):
                 else:
                     putative_element = self.name[0]
             
-            if putative_element.capitalize() in IUPACData.atom_weights:
-                msg = "Used element %r for Atom (name=%s) with given element %r" \
-                      % (putative_element, self.name, element)
+            if putative_element in IUPACData.atom_weights:
+                # msg = "Used element %r for Atom (name=%s) with given element %r" \
+                #       % (putative_element, self.name, element)  
                 element = putative_element
             else:
                 msg = "Could not assign element %r for Atom (name=%s) with given element %r" \
                       % (putative_element, self.name, element)
                 element = ""
-            warnings.warn(msg, PDBConstructionWarning)
+                warnings.warn(msg, PDBConstructionWarning)
                 
         return element
         
     def _assign_atom_mass(self):
         # Needed for Bio/Struct/Geometry.py C.O.M. function
         if self.element:
-            return IUPACData.atom_weights[self.element.capitalize()]
+            return IUPACData.atom_weights[self.element]
         else:
             return float('NaN')
 
