@@ -19,7 +19,7 @@ class Structure(Entity):
     # Special methods
 
     def __repr__(self):
-        return "<Structure id=%s>" % self.get_id()
+        return "<Structure id=%s>" % self.id
 
     # Private methods
 
@@ -33,7 +33,7 @@ class Structure(Entity):
         Arguments:
         o m1, m2 - Model instances
         """
-        return cmp(m1.get_id(), m2.get_id())
+        return cmp(m1.id, m2.id)
 
     # Public
 
@@ -97,7 +97,7 @@ class Structure(Entity):
         for transformation in biomt_data:
             M = [i[:-1] for i in transformation] # Rotation Matrix
             T = [i[-1] for i in transformation] # Translation Vector
-            model = deepcopy(self.child_list[0]) # Bottleneck...
+            model = deepcopy(self.get_list()[0]) # Bottleneck...
             seed += 1
             model.id = seed
             for atom in model.get_atoms():
@@ -201,7 +201,7 @@ class Structure(Entity):
                     % (keep_location,
                         atom,
                         residue.resname,
-                        residue.get_id()[1]))
+                        residue.id[1]))
                 # Remove DisorderedAtom, add Atom.
                 a.disordered_flag = 0
                 a.altloc = " "

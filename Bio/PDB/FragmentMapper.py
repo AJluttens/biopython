@@ -188,7 +188,7 @@ def _make_fragment_list(pp, length):
         for j in range(0, length):
             residue=pp[i+j]
             resname=residue.get_resname()
-            if residue.has_id("CA"):
+            if "CA" in residue:
                 ca=residue["CA"]
             else:
                 raise PDBException("CHAINBREAK")

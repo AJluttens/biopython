@@ -137,7 +137,7 @@ class PDBIO(object):
             for chain in model.get_list():
                 if not select.accept_chain(chain):
                     continue
-                chain_id=chain.get_id()
+                chain_id=chain.id
                 # necessary for TER 
                 # do not write TER if no residues were written
                 # for this chain
@@ -145,7 +145,7 @@ class PDBIO(object):
                 for residue in chain.get_unpacked_list():
                     if not select.accept_residue(residue):
                         continue
-                    hetfield, resseq, icode=residue.get_id()
+                    hetfield, resseq, icode=residue.id
                     resname=residue.get_resname()  
                     segid=residue.get_segid()
                     for atom in residue.get_unpacked_list():

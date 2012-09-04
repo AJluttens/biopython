@@ -33,7 +33,7 @@ class Residue(Entity):
 
     def __repr__(self):
         resname=self.get_resname()
-        hetflag, resseq, icode=self.get_id()
+        hetflag, resseq, icode=self.id
         full_id=(resname, hetflag, resseq, icode)
         return "<Residue %s het=%s resseq=%s icode=%s>" % full_id
 
@@ -76,14 +76,14 @@ class Residue(Entity):
         Checks for adding duplicate atoms, and raises a
         PDBConstructionException if so.
         """
-        atom_id=atom.get_id()
+        atom_id=atom.id
         if atom_id in self:
             raise PDBConstructionException( \
                 "Atom %s defined twice in residue %s" % (atom_id, self))
         Entity.add(self, atom)
 
     def sort(self):
-        self.child_list.sort(self._sort)
+        self.get_list().sort(self._sort)
 
     def flag_disordered(self):
         "Set the disordered flag."
@@ -124,7 +124,7 @@ class DisorderedResidue(DisorderedEntityWrapper):
 
     def __repr__(self):
         resname=self.get_resname()
-        hetflag, resseq, icode=self.get_id()
+        hetflag, resseq, icode=self.id
         full_id=(resname, hetflag, resseq, icode)
         return "<DisorderedResidue %s het=%s resseq=%i icode=%s>" % full_id
 
@@ -134,7 +134,7 @@ class DisorderedResidue(DisorderedEntityWrapper):
             # Atoms in disordered residues should have non-blank
             # altlocs, and are thus represented by DisorderedAtom objects.
             resname=residue.get_resname()
-            het, resseq, icode=residue.get_id() 
+            het, resseq, icode=residue.id 
             # add atom anyway, if PDBParser ignores exception the atom will be part of the residue
             residue.add(atom)
             raise PDBConstructionException( \
@@ -155,9 +155,9 @@ class DisorderedResidue(DisorderedEntityWrapper):
         """
         resname=residue.get_resname()
         # add chain parent to residue
-        chain=self.get_parent()
+        chain=self.parent
         residue.set_parent(chain)
-        assert(resname not in self)
+        assert(resname not in self.child_dict)
         self[resname]=residue
         self.disordered_select(resname)
 

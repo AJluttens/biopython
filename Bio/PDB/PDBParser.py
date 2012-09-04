@@ -11,7 +11,7 @@ from __future__ import with_statement
 import warnings
 import itertools
 
-from numpy import zeros, float32
+import numpy
 from Bio.File import as_handle
 
 from Bio.PDB.PDBExceptions import \
@@ -57,7 +57,6 @@ class PDBParser(object):
             self.structure_builder=StructureBuilder()
         self.header=None
         self.trailer=None
-        self.line_counter=0
         self.PERMISSIVE=bool(PERMISSIVE)
         self.QUIET=bool(QUIET)
         self.get_header=get_header
@@ -115,17 +114,21 @@ class PDBParser(object):
         structure_builder=self.structure_builder
         markers=set(['ATOM  ', 'HETATM', 'MODEL '])
 
-        header = iter([])        
+        header = iter([])
         for i, line in enumerate(header_coords_trailer):
             record_type=line[0:6] 
             if record_type in markers:
-                coords_trailer = itertools.chain(line, header_coords_trailer)
+                coords_trailer = itertools.chain([line], header_coords_trailer)
                 break
             else:
-                header = itertools.chain(header, line)
+                header = itertools.chain(header, [line])
 
         # Return the rest of the coords+trailer for further processing
-        structure_builder.line_counter=i
+        try:
+            structure_builder.line_counter=i
+        except UnboundLocalError: # for loop above never ran bc file is empty
+            return [], []
+
         if self.get_header:
             header_dict=_parse_pdb_header_list(header)
         else:
@@ -133,14 +136,9 @@ class PDBParser(object):
         return header_dict, coords_trailer
     
     def _parse_coordinates(self, coords_trailer):
-        "Parse the atomic data in the PDB file."
-        
+        "Parse the atomic data in the PDB file." 
         # performance
-        coord_array = zeros((3,), dtype=float32)
-        sigatm_array = zeros((5,), dtype=float32)
-        anisou_array = zeros((6,), dtype=float32)
-        siguij_array = zeros((6,), dtype=float32)
-
+        asarray = numpy.asarray
         split = str.split
         strip = str.strip
         
@@ -155,10 +153,10 @@ class PDBParser(object):
         current_residue_id=None
         current_resname=None
         
-        # for i in range(0, len(coords_trailer)):
         for line in coords_trailer:
+ 
             record_type=line[0:6]
-            self.line_counter += 1
+            structure_builder.line_counter += 1
 
             if(record_type=='ATOM  ' or record_type=='HETATM'):
                 # Initialize the Model - there was no explicit MODEL record
@@ -193,27 +191,27 @@ class PDBParser(object):
                 else:
                     hetero_flag=" "
                 residue_id=(hetero_flag, resseq, icode)
-                # atomic coordinates
+                # atomic coordinates  
                 try:
-                    coord_array[:] = (line[30:38], line[38:46], line[46:54])
+                    coord_array = asarray([line[30:38], line[38:46], line[46:54]], dtype=numpy.float32)
                 except:
                     #Should we allow parsing to continue in permissive mode?
                     #If so what coordindates should we default to?  Easier to abort!
                     raise PDBConstructionException(\
                         "Line %i. Invalid or missing coordinate(s) at %s:%s:%s." \
-                        % (self.line_counter, resname, resseq, name))
+                        % (structure_builder.line_counter, resname, resseq, name))
                 # occupancy & B factor
                 try:
                     occupancy=float(line[54:60])
                 except:
                     self._handle_PDB_exception("Invalid or missing occupancy",
-                                               self.line_counter)
+                                               structure_builder.line_counter)
                     occupancy = 0.0 #Is one or zero a good default?
                 try:
                     bfactor=float(line[60:66])
                 except:
                     self._handle_PDB_exception("Invalid or missing B factor",
-                                               self.line_counter)
+                                               structure_builder.line_counter)
                     bfactor = 0.0 #The PDB use a default of zero if the data is missing
                 segid=line[72:76]
                 element=strip(line[76:78])
@@ -226,29 +224,29 @@ class PDBParser(object):
                     try:
                         structure_builder.init_residue(resname, hetero_flag, resseq, icode)
                     except PDBConstructionException, message:
-                        self._handle_PDB_exception(message, self.line_counter)
+                        self._handle_PDB_exception(message, structure_builder.line_counter)
                 elif current_residue_id!=residue_id or current_resname!=resname:
                     current_residue_id=residue_id
                     current_resname=resname
                     try:
                         structure_builder.init_residue(resname, hetero_flag, resseq, icode)
                     except PDBConstructionException, message:
-                        self._handle_PDB_exception(message, self.line_counter) 
+                        self._handle_PDB_exception(message, structure_builder.line_counter) 
                 # init atom
                 try:
                     structure_builder.init_atom(name, coord_array, bfactor, occupancy, altloc,
                                                 fullname, serial_number, element)
                 except PDBConstructionException, message:
-                    self._handle_PDB_exception(message, self.line_counter)
+                    self._handle_PDB_exception(message, structure_builder.line_counter)
             elif(record_type=='ANISOU'):
-                try:
-                    anisou_array[:] = (line[28:35], line[35:42], line[43:49], line[49:56], line[56:63], line[63:70])
+                try:   
+                    anisou_array = asarray([line[28:35], line[35:42], line[43:49], line[49:56], line[56:63], line[63:70]], dtype=numpy.float32)
                     # U's are scaled by 10^4 
                     anisou_array=anisou_array/10000
                 except ValueError, message:
                     warnings.warn("Line %i: %s\n"
                                   "Invalid ANISOU Temperature Factor in atom %s:%s"
-                                  %(self.line_counter, message, name, serial_number), 
+                                  %(structure_builder.line_counter, message, name, serial_number), 
                                   PDBConstructionWarning)
                     # Defaulting to None seems the best option
                     anisou_array = None
@@ -259,7 +257,7 @@ class PDBParser(object):
                     serial_num=int(line[10:14])
                 except:
                     self._handle_PDB_exception("Invalid or missing model serial number",
-                                               self.line_counterr)
+                                               structure_builder.line_counterr)
                     serial_num=0
                 structure_builder.init_model(current_model_id,serial_num)
                 current_model_id+=1
@@ -275,13 +273,13 @@ class PDBParser(object):
                 current_residue_id=None
             elif(record_type=='SIGUIJ'):
                 # standard deviation of anisotropic B factor
-                siguij_array[:] = (line[28:35], line[35:42], line[42:49], line[49:56], line[56:63], line[63:70])
+                siguij_array = asarray([line[28:35], line[35:42], line[42:49], line[49:56], line[56:63], line[63:70]], dtype=numpy.float32)
                 # U sigma's are scaled by 10^4
                 siguij_array=siguij_array/10000   
                 structure_builder.set_siguij(siguij_array)
             elif(record_type=='SIGATM'):
                 # standard deviation of atomic positions
-                sigatm_array[:] = (line[30:38], line[38:45], line[46:54], line[54:60], line[60:66])
+                siguij_array = asarray([line[30:38], line[38:45], line[46:54], line[54:60], line[60:66]], dtype=numpy.float32)
                 structure_builder.set_sigatm(sigatm_array)
         # EOF (does not end in END or CONECT)
         return []
@@ -314,17 +312,17 @@ if __name__=="__main__":
     s=p.get_structure("scr", filename)
 
     for m in s:
-        p=m.get_parent()
+        p=m.parent
         assert(p is s)
         for c in m:
-            p=c.get_parent()
+            p=c.parent
             assert(p is m)
             for r in c:
                 print r
-                p=r.get_parent()
+                p=r.parent
                 assert(p is c)
                 for a in r:
-                    p=a.get_parent()
+                    p=a.parent
                     if not p is r:
                         print p, r
                     

@@ -5,6 +5,11 @@
 
 from copy import copy
 
+try:
+    from collections import OrderedDict
+except ImportError:
+    from Bio._py3k import OrderedDict
+    
 from Bio.PDB.PDBExceptions import PDBConstructionException, PDBException
 
 """Base class for Residue, Chain, Model and Structure classes.
@@ -22,8 +27,7 @@ class Entity(object):
         self.id=id
         self.full_id=None
         self.parent=None
-        self.child_list=[]
-        self.child_dict={}
+        self.child_dict=OrderedDict()
         # Dictionary that keeps addictional properties
         self.xtra={}
     
@@ -31,7 +35,7 @@ class Entity(object):
 
     def __len__(self):
         "Return the number of children."
-        return len(self.child_list)
+        return len(self.child_dict)
 
     def __getitem__(self, id):
         "Return the child with given id."
@@ -39,7 +43,7 @@ class Entity(object):
 
     def __delitem__(self, id):
         "Remove a child."
-        return self.detach_child(id)
+        del self.child_dict[id]
 
     def __contains__(self, id):
         "True if there is a child element with the given id."
@@ -47,8 +51,8 @@ class Entity(object):
 
     def __iter__(self):
         "Iterate over children."
-        for child in self.child_list:
-            yield child
+        for child in self.child_dict:
+            yield self[child]
 
     # Public methods    
 
@@ -76,50 +80,39 @@ class Entity(object):
         child=self.child_dict[id] 
         child.detach_parent()
         del self.child_dict[id]
-        self.child_list.remove(child)
 
     def add(self, entity):
         "Add a child to the Entity."
-        entity_id=entity.get_id()
-        # if self.has_id(entity_id):
+        entity_id=entity.id
         if entity_id in self:
             raise PDBConstructionException( \
                 "%s defined twice" % str(entity_id))
         entity.set_parent(self)
-        self.child_list.append(entity)
         self.child_dict[entity_id]=entity
     
     def insert(self, pos, entity):
         "Add a child to the Entity at a specified position."
-        entity_id=entity.get_id()
-        # if self.has_id(entity_id):
+        entity_id=entity.id
         if entity_id in self:
             raise PDBConstructionException( \
                 "%s defined twice" % str(entity_id))
         entity.set_parent(self)
-        self.child_list[pos:pos] = [entity]
-        self.child_dict[entity_id]=entity        
+        # Farfetched..
+        pre_pos = [(k,v) for i, (k,v) in enumerate(self.child_dict.iteritems()) if i<pos]
+        post_pos = [(k,v) for i, (k,v) in enumerate(self.child_dict.iteritems()) if i>=pos]
+        new_order = pre_pos+[(entity_id, entity)]+post_pos
+        self.child_dict = OrderedDict()
+        for k,v in new_order:
+            self.child_dict[k]=v
 
     def get_iterator(self):
         "Return iterator over children."
-        for child in self.child_list:
+        for child in self.child_dict:
             yield child
 
     def get_list(self):
         "Return a copy of the list of children."
-        return copy(self.child_list)
-    # 
-    # def has_id(self, id):
-    #     """True if a child with given id exists."""
-    #     return (id in self.child_dict)   
-
-    def get_parent(self):
-        "Return the parent Entity object."
-        return self.parent
-
-    def get_id(self):
-        "Return the id."
-        return self.id
+        return self.child_dict.values()[:]
 
     def get_full_id(self):
         """Return the full id.
@@ -142,13 +135,13 @@ class Entity(object):
         identifier is 10 and its insertion code "A".
         """
         if self.full_id==None:
-            entity_id=self.get_id()
+            entity_id=self.id
             l=[entity_id]   
-            parent=self.get_parent()
+            parent=self.parent
             while not (parent is None):
-                entity_id=parent.get_id()
+                entity_id=parent.id
                 l.append(entity_id)
-                parent=parent.get_parent()
+                parent=parent.parent
             l.reverse()
             self.full_id=tuple(l)
         return self.full_id
@@ -174,13 +167,12 @@ class Entity(object):
     def copy(self):
         shallow = copy(self)
 
-        shallow.child_list = []
         shallow.child_dict = {}
         shallow.xtra = copy(self.xtra)
 
         shallow.detach_parent()
 
-        for child in self.child_list:
+        for child in self:
             shallow.add(child.copy())
         return shallow
 
@@ -196,7 +188,7 @@ class DisorderedEntityWrapper(object):
     """
     def __init__(self, id):
         self.id=id
-        self.child_dict={}
+        self.child_dict=OrderedDict()
         self.selected_child=None
         self.parent=None    
 
@@ -236,25 +228,13 @@ class DisorderedEntityWrapper(object):
         """Subtraction with another object."""
         return self.selected_child - other
 
-    # Public methods    
-
-    def get_id(self):
-        "Return the id."
-        return self.id
-
-    # def disordered_has_id(self, id):
-    #     """True if there is an object present associated with this id."""
-    #     return (id in self.child_dict)      
+    # Public methods         
 
     def detach_parent(self):
         "Detach the parent"
         self.parent=None
         for child in self.disordered_get_list():
             child.detach_parent()
-
-    def get_parent(self):
-        "Return parent."
-        return self.parent
 
     def set_parent(self, parent):
         "Set the parent for the object and its children."
@@ -291,7 +271,7 @@ class DisorderedEntityWrapper(object):
 
         If id is None, the currently selected child is returned.
         """
-        if id==None:
+        if id is None:
             return self.selected_child
         return self.child_dict[id]
 

@@ -38,7 +38,7 @@ def run_naccess(model, pdb_file, probe_size = None, z_slice = None, \
         os.system('cp %s %s' % (pdb_file, tmp_pdb_file))
     else:
         writer = PDBIO()
-        writer.set_structure(model.get_parent())
+        writer.set_structure(model.parent)
         writer.save(tmp_pdb_file)
 
     # create the command line and run
@@ -125,9 +125,9 @@ class NACCESS(AbstractResiduePropertyMap):
         property_list=[]
         # Now create a dictionary that maps Residue objects to accessibility
         for chain in model:
-            chain_id=chain.get_id()
+            chain_id=chain.id
             for res in chain:
-                res_id=res.get_id()
+                res_id=res.id
                 if (chain_id, res_id) in naccess_dict:
                     item = naccess_dict[(chain_id, res_id)]
                     res_name = item['res_name']
@@ -154,11 +154,11 @@ class NACCESS_atomic(AbstractAtomPropertyMap):
         property_list=[]
         # Now create a dictionary that maps Atom objects to accessibility
         for chain in model:
-            chain_id = chain.get_id()
+            chain_id = chain.id
             for residue in chain:
-                res_id = residue.get_id()
+                res_id = residue.id
                 for atom in residue:
-                    atom_id = atom.get_id()
+                    atom_id = atom.id
                     full_id=(chain_id, res_id, atom_id)
                     if full_id in self.naccess_atom_dict:
                         asa = self.naccess_atom_dict[full_id]

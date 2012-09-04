@@ -84,7 +84,7 @@ class Chain(Entity):
         return Entity.__delitem__(self, id)
 
     def __repr__(self):
-        return "<Chain id=%s>" % self.get_id()
+        return "<Chain id=%s>" % self.id
 
     # Public methods
 
@@ -104,18 +104,18 @@ class Chain(Entity):
                 unpacked_list.append(residue)
         return unpacked_list
 
-    def has_id(self, id):
-        """Return 1 if a residue with given id is present.
-
-        The id of a residue is (hetero flag, sequence identifier, insertion code).
-                If id is an int, it is translated to (" ", id, " ") by the _translate_id
-        method.
-
-        Arguments:
-        o id - (string, int, string) or int
-        """
-        id=self._translate_id(id)
-        return Entity.has_id(self, id)
+    # def has_id(self, id):
+    #     """Return 1 if a residue with given id is present.
+    # 
+    #     The id of a residue is (hetero flag, sequence identifier, insertion code).
+    #             If id is an int, it is translated to (" ", id, " ") by the _translate_id
+    #     method.
+    # 
+    #     Arguments:
+    #     o id - (string, int, string) or int
+    #     """
+    #     id=self._translate_id(id)
+    #     return id in self 
 
     
     def _renumber_single_residue(self, old_id, new_id):
@@ -169,7 +169,7 @@ class Chain(Entity):
             filter_by_ca = True
         
         # Calculate displacement value from 1st residue
-        residue_list = self.child_list
+        residue_list = self.get_list()
         displace = res_init - residue_list[0].id[1]
         
         # To keep track of last residue number

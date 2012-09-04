@@ -55,13 +55,10 @@ class A_ExceptionTest(unittest.TestCase):
             # Trigger warnings
             p = PDBParser(PERMISSIVE=True)
             p.get_structure("example", "PDB/a_structure.pdb")
-            self.assertEqual(len(all_warns), 14)
+            self.assertEqual(len(all_warns), 11)
             for wrn, msg in zip(all_warns, [
                 # Expected warning messages:
-                "Used element 'N' for Atom (name=N) with given element ''",
-                "Used element 'C' for Atom (name=CA) with given element ''",
                 "Atom names ' CA ' and 'CA  ' differ only in spaces at line 17.",
-                "Used element 'CA' for Atom (name=CA  ) with given element ''",
                 'Atom N defined twice in residue <Residue ARG het=  resseq=2 icode= > at line 21.',
                 'disordered atom found with blank altloc before line 33.',
                 "Residue (' ', 4, ' ') redefined at line 43.",
@@ -153,8 +150,8 @@ class ParseTest(unittest.TestCase):
         self.assertEqual(len(polypeptides), 1)
         pp = polypeptides[0]
         # Check the start and end positions
-        self.assertEqual(pp[0].get_id()[1], 2)
-        self.assertEqual(pp[-1].get_id()[1], 86)
+        self.assertEqual(pp[0].id[1], 2)
+        self.assertEqual(pp[-1].id[1], 86)
         # Check the sequence
         s = pp.get_sequence()
         self.assertTrue(isinstance(s, Seq))
@@ -170,8 +167,8 @@ class ParseTest(unittest.TestCase):
         self.assertEqual(len(polypeptides), 1)
         pp = polypeptides[0]
         # Check the start and end positions
-        self.assertEqual(pp[0].get_id()[1], 2)
-        self.assertEqual(pp[-1].get_id()[1], 86)
+        self.assertEqual(pp[0].id[1], 2)
+        self.assertEqual(pp[-1].id[1], 86)
         # Check the sequence
         s = pp.get_sequence()
         self.assertTrue(isinstance(s, Seq))
@@ -192,7 +189,7 @@ class ParseTest(unittest.TestCase):
         self.assertEqual(len(m0['A']), 1)
         # Residue ('H_PCA', 1, ' ') contains 8 atoms.
         residue = m0['A'].get_list()[0]
-        self.assertEqual(residue.get_id(), ('H_PCA', 1, ' '))
+        self.assertEqual(residue.id, ('H_PCA', 1, ' '))
         self.assertEqual(len(residue), 9)
         # --- Checking model 1 ---
         m1 = self.structure[1]
@@ -374,12 +371,12 @@ class ParseTest(unittest.TestCase):
         for c_idx, chn in enumerate(chain_data):
             # Check chain ID and length
             chain = m1.get_list()[c_idx]
-            self.assertEqual(chain.get_id(), chn[0])
+            self.assertEqual(chain.id, chn[0])
             self.assertEqual(len(chain), chn[1])
             for r_idx, res in enumerate(chn[2]):
                 residue = chain.get_list()[r_idx]
                 # Check residue ID and atom count
-                self.assertEqual(residue.get_id(), res[0])
+                self.assertEqual(residue.id, res[0])
                 self.assertEqual(len(residue), res[1])
                 disorder_lvl = residue.is_disordered()
                 if disorder_lvl == 1:
@@ -518,8 +515,8 @@ class ParseReal(unittest.TestCase):
             self.assertEqual(len(polypeptides), 1)
             pp = polypeptides[0]
             # Check the start and end positions
-            self.assertEqual(pp[0].get_id()[1], 151)
-            self.assertEqual(pp[-1].get_id()[1], 220)
+            self.assertEqual(pp[0].id[1], 151)
+            self.assertEqual(pp[-1].id[1], 220)
             # Check the sequence
             s = pp.get_sequence()
             self.assertTrue(isinstance(s, Seq))
@@ -535,24 +532,24 @@ class ParseReal(unittest.TestCase):
             self.assertEqual(len(polypeptides), 3)
             #First fragment
             pp = polypeptides[0]
-            self.assertEqual(pp[0].get_id()[1], 152)
-            self.assertEqual(pp[-1].get_id()[1], 184)
+            self.assertEqual(pp[0].id[1], 152)
+            self.assertEqual(pp[-1].id[1], 184)
             s = pp.get_sequence()
             self.assertTrue(isinstance(s, Seq))
             self.assertEqual(s.alphabet, generic_protein)
             self.assertEqual("DIRQGPKEPFRDYVDRFYKTLRAEQASQEVKNW", str(s))
             #Second fragment
             pp = polypeptides[1]
-            self.assertEqual(pp[0].get_id()[1], 186)
-            self.assertEqual(pp[-1].get_id()[1], 213)
+            self.assertEqual(pp[0].id[1], 186)
+            self.assertEqual(pp[-1].id[1], 213)
             s = pp.get_sequence()
             self.assertTrue(isinstance(s, Seq))
             self.assertEqual(s.alphabet, generic_protein)
             self.assertEqual("TETLLVQNANPDCKTILKALGPGATLEE", str(s))
             #Third fragment
             pp = polypeptides[2]
-            self.assertEqual(pp[0].get_id()[1], 216)
-            self.assertEqual(pp[-1].get_id()[1], 220)
+            self.assertEqual(pp[0].id[1], 216)
+            self.assertEqual(pp[-1].id[1], 220)
             s = pp.get_sequence()
             self.assertTrue(isinstance(s, Seq))
             self.assertEqual(s.alphabet, generic_protein)
@@ -684,7 +681,7 @@ class Exposure(unittest.TestCase):
         warnings.filters.pop()
         self.model=structure[1]
         #Look at first chain only
-        a_residues=list(self.model["A"].child_list)
+        a_residues=self.model["A"].get_list()
         self.assertEqual(86, len(a_residues))
         self.assertEqual(a_residues[0].get_resname(), "CYS")
         self.assertEqual(a_residues[1].get_resname(), "ARG")
@@ -769,7 +766,7 @@ class Atom_Element(unittest.TestCase):
 
     def test_AtomElement(self):
         """ Atom Element """
-        atoms = self.residue.child_list
+        atoms = self.residue.get_list()
         self.assertEqual('N', atoms[0].element) # N
         self.assertEqual('C', atoms[1].element) # Alpha Carbon
         self.assertEqual('CA', atoms[8].element) # Calcium
@@ -779,7 +776,7 @@ class Atom_Element(unittest.TestCase):
         pdb_filename = "PDB/ions.pdb"
         structure=PDBParser(PERMISSIVE=True).get_structure('X', pdb_filename)
         # check magnesium atom
-        atoms = structure[0]['A'][('H_ MG', 1, ' ')].child_list
+        atoms = structure[0]['A'][('H_ MG', 1, ' ')].get_list()
         self.assertEqual('MG', atoms[0].element)
 
 class IterationTests(unittest.TestCase):        

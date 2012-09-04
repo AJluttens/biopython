@@ -52,8 +52,8 @@ class NeighborSearch(object):
         # o pair_list - a list of (entity, entity) tuples
         parent_pair_list=[]
         for (e1, e2) in pair_list:
-            p1=e1.get_parent()
-            p2=e2.get_parent()
+            p1=e1.parent
+            p2=e2.parent
             if p1==p2:
                 continue
             elif p1<p2:

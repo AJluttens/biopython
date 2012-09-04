@@ -247,7 +247,7 @@ class Polypeptide(list):
             tau=calc_dihedral(v1, v2, v3, v4)
             tau_list.append(tau)
             # Put tau in xtra dict of residue
-            res=ca_list[i+2].get_parent()
+            res=ca_list[i+2].parent
             res.xtra["TAU"]=tau
         return tau_list
 
@@ -261,7 +261,7 @@ class Polypeptide(list):
             theta=calc_angle(v1, v2, v3)
             theta_list.append(theta)
             # Put tau in xtra dict of residue
-            res=ca_list[i+1].get_parent()
+            res=ca_list[i+1].parent
             res.xtra["THETA"]=theta
         return theta_list
 
@@ -283,8 +283,8 @@ class Polypeptide(list):
         Return <Polypeptide start=START end=END>, where START
         and END are sequence identifiers of the outer residues.
         """
-        start=self[0].get_id()[1]
-        end=self[-1].get_id()[1]
+        start=self[0].id[1]
+        end=self[-1].id[1]
         s="<Polypeptide start=%s end=%s>" % (start, end)
         return s
 
@@ -307,7 +307,7 @@ class _PPBuilder:
         """Check if the residue is an amino acid (PRIVATE)."""
         if is_aa(residue, standard=standard_aa_only):
             return True
-        elif not standard_aa_only and "CA" in residue.child_dict:
+        elif not standard_aa_only and "CA" in residue:
             #It has an alpha carbon...
             #We probably need to update the hard coded list of
             #non-standard residues, see function is_aa for details.
@@ -333,23 +333,24 @@ class _PPBuilder:
         # Decide wich entity we are dealing with
         if level=="S":
             model=entity[0]
-            chain_list=model.get_list()
+            chain_list=model
         elif level=="M":
-            chain_list=entity.get_list()
+            chain_list=entity
         elif level=="C":
             chain_list=[entity]
         else:
             raise PDBException("Entity should be Structure, Model or Chain.")
         pp_list=[]
         for chain in chain_list:
-            chain_it=iter(chain)
+            chain_it = iter(chain)
             try:
                 prev_res = chain_it.next()
                 while not accept(prev_res, aa_only):
                     prev_res = chain_it.next()
             except StopIteration:
                 #No interesting residues at all in this chain
-                continue
+                continue                      
+
             pp=None
             for next_res in chain_it:
                 if accept(prev_res, aa_only) \
@@ -375,7 +376,7 @@ class CaPPBuilder(_PPBuilder):
 
     def _is_connected(self, prev_res, next_res):
         for r in [prev_res, next_res]:
-            if not r.has_id("CA"):
+            if "CA" not in r:
                 return False
         n=next_res["CA"]
         p=prev_res["CA"]
@@ -401,11 +402,11 @@ class PPBuilder(_PPBuilder):
         _PPBuilder.__init__(self, radius)
 
     def _is_connected(self, prev_res, next_res):
-        if not prev_res.has_id("C"):
+        if "C" not in prev_res:
             return False
-        if not next_res.has_id("N"):
+        if "N" not in next_res:
             return False
-        test_dist=self._test_dist
+        test_dist=self._test_dist 
         c=prev_res["C"]
         n=next_res["N"]
         # Test all disordered atom positions!

@@ -112,7 +112,7 @@ class Atom(object):
 
     def __repr__(self):
         "Print Atom object as <Atom atom_name>."
-        return "<Atom %s>" % self.get_id()
+        return "<Atom %s>" % self.id
 
     def __sub__(self, other):
         """
@@ -320,14 +320,14 @@ class DisorderedAtom(DisorderedEntityWrapper):
     # Special methods
 
     def __repr__(self):
-        return "<Disordered Atom %s>" % self.get_id() 
+        return "<Disordered Atom %s>" % self.id 
 
     def disordered_add(self, atom):
         "Add a disordered atom."
         # Add atom to dict, use altloc as key   
         atom.flag_disorder()
         # set the residue parent of the added atom
-        residue=self.get_parent()
+        residue=self.parent
         atom.set_parent(residue)
         altloc=atom.get_altloc()
         occupancy=atom.get_occupancy()

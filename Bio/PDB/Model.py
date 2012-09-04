@@ -42,8 +42,8 @@ class Model(Entity):
         Arguments:
         o c1, c2 - Chain objects
         """
-        id1=c1.get_id()
-        id2= c2.get_id()
+        id1=c1.id
+        id2= c2.id
         # make sure blank chains come last (often waters)
         if id1==" " and not id2==" ":
             return 1
@@ -54,7 +54,7 @@ class Model(Entity):
     # Special methods
 
     def __repr__(self):
-        return "<Model id=%s>" % self.get_id()
+        return "<Model id=%s>" % self.id
 
     # Public
 

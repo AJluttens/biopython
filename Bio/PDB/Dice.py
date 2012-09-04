@@ -26,23 +26,23 @@ class ChainSelector(object):
 
     def accept_model(self, model):
         # model - only keep model 0
-        if model.get_id()==self.model_id:
+        if model.id==self.model_id:
             return 1
         return 0
 
     def accept_chain(self, chain):
-        if chain.get_id()==self.chain_id:
+        if chain.id==self.chain_id:
             return 1
         return 0
 
     def accept_residue(self, residue):
         # residue - between start and end
-        hetatm_flag, resseq, icode=residue.get_id()
+        hetatm_flag, resseq, icode=residue.id
         if hetatm_flag!=" ":
             # skip HETATMS
             return 0
         if icode!=" ":
-            warnings.warn("WARNING: Icode at %s" % residue.get_id(),
+            warnings.warn("WARNING: Icode at %s" % residue.id,
                           RuntimeWarning)
         if self.start<=resseq<=self.end:
             return 1
@@ -50,7 +50,7 @@ class ChainSelector(object):
 
     def accept_atom(self, atom):
         # atoms - get rid of hydrogens
-        name=atom.get_id()
+        name=atom.id
         if _hydrogen.match(name):
             return 0
         else:
