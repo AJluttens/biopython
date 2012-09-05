@@ -139,6 +139,7 @@ class PDBParser(object):
         "Parse the atomic data in the PDB file." 
         # performance
         asarray = numpy.asarray
+        samplearray=numpy.empty((3,), dtype=numpy.float32)
         split = str.split
         strip = str.strip
         
@@ -191,9 +192,10 @@ class PDBParser(object):
                 else:
                     hetero_flag=" "
                 residue_id=(hetero_flag, resseq, icode)
-                # atomic coordinates  
+                # atomic coordinates                                         
                 try:
-                    coord_array = asarray([line[30:38], line[38:46], line[46:54]], dtype=numpy.float32)
+                    #coord_array = asarray((line[30:38], line[38:46], line[46:54]), dtype=numpy.float32)
+                    samplearray[:] = (line[30:38], line[38:46], line[46:54])
                 except:
                     #Should we allow parsing to continue in permissive mode?
                     #If so what coordindates should we default to?  Easier to abort!
@@ -234,8 +236,11 @@ class PDBParser(object):
                         self._handle_PDB_exception(message, structure_builder.line_counter) 
                 # init atom
                 try:
-                    structure_builder.init_atom(name, coord_array, bfactor, occupancy, altloc,
+                    structure_builder.init_atom(name, numpy.copy(samplearray), bfactor, occupancy, altloc,
                                                 fullname, serial_number, element)
+
+                    # structure_builder.init_atom(name, coord_array, bfactor, occupancy, altloc,
+                    #                             fullname, serial_number, element)
                 except PDBConstructionException, message:
                     self._handle_PDB_exception(message, structure_builder.line_counter)
             elif(record_type=='ANISOU'):
@@ -257,7 +262,7 @@ class PDBParser(object):
                     serial_num=int(line[10:14])
                 except:
                     self._handle_PDB_exception("Invalid or missing model serial number",
-                                               structure_builder.line_counterr)
+                                               structure_builder.line_counter)
                     serial_num=0
                 structure_builder.init_model(current_model_id,serial_num)
                 current_model_id+=1

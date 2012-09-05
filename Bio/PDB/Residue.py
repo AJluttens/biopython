@@ -36,37 +36,21 @@ class Residue(Entity):
         hetflag, resseq, icode=self.id
         full_id=(resname, hetflag, resseq, icode)
         return "<Residue %s het=%s resseq=%s icode=%s>" % full_id
-
-    # Private methods
-
-    def _sort(self, a1, a2):
-        """Sort the Atom objects.
-
-        Atoms are sorted alphabetically according to their name, 
-        but N, CA, C, O always come first.
-
-        Arguments:
-        o a1, a2 - Atom objects
+    
+    def __cmp__(self, other):
         """
-        name1=a1.get_name()
-        name2=a2.get_name()
-        if name1==name2:
-            return(cmp(a1.get_altloc(), a2.get_altloc()))
-        if name1 in _atom_name_dict:
-            index1=_atom_name_dict[name1]
-        else:
-            index1=None
-        if name2 in _atom_name_dict:
-            index2=_atom_name_dict[name2]
-        else:
-            index2=None
-        if index1 and index2:
-            return cmp(index1, index2)
-        if index1:
-            return -1
-        if index2:
-            return 1
-        return cmp(name1, name2)
+        Residues are first sorted according to their hetatm records.
+        Protein and nucleic acid residues first, hetatm residues next, 
+        and waters last. Within each group, the residues are sorted according
+        to their resseq's (sequence identifiers). Finally, residues with the
+        same resseq's are sorted according to icode.
+        """
+
+        hetflag1, resseq1, icode1=self.id
+        hetflag2, resseq2, icode2=other.id
+        if resseq1!=resseq2:
+            return cmp(resseq1, resseq2)
+        return cmp(icode1, icode2)
 
     # Public methods
 

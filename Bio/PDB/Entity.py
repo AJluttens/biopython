@@ -4,11 +4,6 @@
 # as part of this package.  
 
 from copy import copy
-
-try:
-    from collections import OrderedDict
-except ImportError:
-    from Bio._py3k import OrderedDict
     
 from Bio.PDB.PDBExceptions import PDBConstructionException, PDBException
 
@@ -27,7 +22,7 @@ class Entity(object):
         self.id=id
         self.full_id=None
         self.parent=None
-        self.child_dict=OrderedDict()
+        self.child_dict={}
         # Dictionary that keeps addictional properties
         self.xtra={}
     
@@ -51,8 +46,8 @@ class Entity(object):
 
     def __iter__(self):
         "Iterate over children."
-        for child in self.child_dict:
-            yield self[child]
+        for child in sorted(self.child_dict.values()):
+            yield child
 
     # Public methods    
 
@@ -89,30 +84,25 @@ class Entity(object):
                 "%s defined twice" % str(entity_id))
         entity.set_parent(self)
         self.child_dict[entity_id]=entity
-    
-    def insert(self, pos, entity):
-        "Add a child to the Entity at a specified position."
-        entity_id=entity.id
-        if entity_id in self:
-            raise PDBConstructionException( \
-                "%s defined twice" % str(entity_id))
-        entity.set_parent(self)
-        # Farfetched..
-        pre_pos = [(k,v) for i, (k,v) in enumerate(self.child_dict.iteritems()) if i<pos]
-        post_pos = [(k,v) for i, (k,v) in enumerate(self.child_dict.iteritems()) if i>=pos]
-        new_order = pre_pos+[(entity_id, entity)]+post_pos
-        self.child_dict = OrderedDict()
-        for k,v in new_order:
-            self.child_dict[k]=v
-
-    def get_iterator(self):
-        "Return iterator over children."
-        for child in self.child_dict:
-            yield child
+    # 
+    # def insert(self, pos, entity):
+    #     "Add a child to the Entity at a specified position."
+    #     entity_id=entity.id
+    #     if entity_id in self:
+    #         raise PDBConstructionException( \
+    #             "%s defined twice" % str(entity_id))
+    #     entity.set_parent(self)
+    #     # Farfetched..
+    #     pre_pos = [(k,v) for i, (k,v) in enumerate(self.child_dict.iteritems()) if i<pos]
+    #     post_pos = [(k,v) for i, (k,v) in enumerate(self.child_dict.iteritems()) if i>=pos]
+    #     new_order = pre_pos+[(entity_id, entity)]+post_pos
+    #     self.child_dict = OrderedDict()
+    #     for k,v in new_order:
+    #         self.child_dict[k]=v 
 
     def get_list(self):
         "Return a copy of the list of children."
-        return self.child_dict.values()[:]
+        return sorted(self.child_dict.values())
 
     def get_full_id(self):
         """Return the full id.
@@ -188,7 +178,7 @@ class DisorderedEntityWrapper(object):
     """
     def __init__(self, id):
         self.id=id
-        self.child_dict=OrderedDict()
+        self.child_dict={}
         self.selected_child=None
         self.parent=None    
 
@@ -217,8 +207,9 @@ class DisorderedEntityWrapper(object):
         return (id in self.selected_child)
 
     def __iter__(self):
-        "Return the number of children."
-        return iter(self.selected_child)
+        "Iterate over selected child."
+        for child in sorted(self.selected_child.child_dict.values()):
+            yield child
 
     def __len__(self):
         "Return the number of children."

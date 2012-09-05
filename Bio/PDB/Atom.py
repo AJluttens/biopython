@@ -14,6 +14,13 @@ from Bio.PDB.PDBExceptions import PDBConstructionWarning
 from Bio.PDB.Vector import Vector
 from Bio.Data import IUPACData
 
+# For sorting atom names
+_atom_name_dict={}
+_atom_name_dict["N"]=1
+_atom_name_dict["CA"]=2
+_atom_name_dict["C"]=3
+_atom_name_dict["O"]=4
+
 class Atom(object):
     def __init__(self, name, coord, bfactor, occupancy, altloc, fullname, serial_number,
                  element=None):
@@ -126,6 +133,35 @@ class Atom(object):
         """
         diff=self.coord-other.coord
         return numpy.sqrt(numpy.dot(diff,diff))
+    
+    def __cmp__(self, other):
+        """
+        Compares two atoms based on their atom names.
+        N,CA,C,O always come first. Inorganic always come last.
+        """                  
+        organic = set(['C', 'N', 'O', 'H'])                       
+        name1=self.name
+        name2=other.name
+        # Same name, compare altlocs
+        if name1==name2:
+            return cmp(self.altloc, other.altloc)
+        # Check if priority names
+        index1 = _atom_name_dict.get(name1)
+        index2 = _atom_name_dict.get(name2)
+        if index1 and index2:
+            return cmp(index1, index2)
+        elif not index1 and index2:
+            return 1
+        elif not index2 and index1:
+            return -1
+        else: # If not priority
+            # Inorganic come at the end
+            if self.element in organic and other.element not in organic:
+                return -1
+            if self.element not in organic and other.element in organic:
+                return 1
+            # finally, alphabetatically compare names
+            return cmp(name1, name2)        
 
     # set methods
 

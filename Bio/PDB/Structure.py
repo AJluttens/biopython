@@ -23,23 +23,19 @@ class Structure(Entity):
 
     # Private methods
 
-    def _sort(self, m1, m2):
-        """Sort models.
-
-        This sorting function sorts the Model instances in the Structure instance.
-        The sorting is done based on the model id, which is a simple int that
-        reflects the order of the models in the PDB file.
-
-        Arguments:
-        o m1, m2 - Model instances
-        """
-        return cmp(m1.id, m2.id)
+    # def _sort(self, m1, m2):
+    #     """Sort models.
+    #     
+    #     This sorting function sorts the Model instances in the Structure instance.
+    #     The sorting is done based on the model id, which is a simple int that
+    #     reflects the order of the models in the PDB file.
+    #     
+    #     Arguments:
+    #     o m1, m2 - Model instances
+    #     """
+    #     return cmp(m1.id, m2.id)   
 
     # Public
-
-    def get_models(self): # Redundant, but for consistency
-        for m in self:
-            yield m
 
     def get_chains(self):
         for m in self:

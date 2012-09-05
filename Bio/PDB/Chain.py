@@ -15,26 +15,6 @@ class Chain(Entity):
 
     # Private methods
 
-    def _sort(self, r1, r2):
-        """Sort function for residues in a chain
-
-        Residues are first sorted according to their hetatm records.
-        Protein and nucleic acid residues first, hetatm residues next, 
-        and waters last. Within each group, the residues are sorted according
-        to their resseq's (sequence identifiers). Finally, residues with the
-        same resseq's are sorted according to icode.
-
-        Arguments:
-        o r1, r2 - Residue objects
-        """
-        hetflag1, resseq1, icode1=r1.id
-        hetflag2, resseq2, icode2=r2.id
-        if hetflag1!=hetflag2:
-            return cmp(hetflag1[0], hetflag2[0])
-        elif resseq1!=resseq2:
-            return cmp(resseq1, resseq2)
-        return cmp(icode1, icode2)
-
     def _translate_id(self, id):
         """
         A residue id is normally a tuple (hetero flag, sequence identifier, 
@@ -85,6 +65,16 @@ class Chain(Entity):
 
     def __repr__(self):
         return "<Chain id=%s>" % self.id
+    
+    def __cmp__(self, other):
+        id1=self.id
+        id2=other.id
+        # make sure blank chains come last (often waters)
+        if id1==" " and not id2==" ":
+            return 1
+        elif id2==" " and not id1==" ":
+            return -1
+        return cmp(id1, id2)
 
     # Public methods
 
