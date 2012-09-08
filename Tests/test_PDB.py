@@ -9,6 +9,9 @@
 # as part of this package.
 
 """Unit tests for the Bio.PDB module."""
+import sys
+sys.path.insert(0, "/Users/joaorodrigues/Code/biopython/build/lib.macosx-10.6-universal-2.6") # optimized
+
 import os
 import tempfile
 import unittest
@@ -405,9 +408,9 @@ class ParseTest(unittest.TestCase):
         self.assertEqual(len(chain), 1)
         self.assertEqual(" ".join(residue.resname for residue in chain), "PCA")
         self.assertEqual(" ".join(atom.name for atom in chain.get_atoms()),
-                         "N CA CB CG CD OE C O CA  ")
+                         "N CA C O CB CD CG OE CA  ")
         self.assertEqual(" ".join(atom.element for atom in chain.get_atoms()),
-                         "N C C C C O C O CA")
+                         "N C C O C C C O CA")
         #Second model
         model = structure[1]
         self.assertEqual(model.id, 1)
@@ -427,65 +430,75 @@ class ParseTest(unittest.TestCase):
                          "GLY ASN ASP TYR CYS SER GLY GLY ASN CYS GLN TYR "
                          "ARG CYS")
         self.assertEqual(" ".join(atom.name for atom in chain.get_atoms()),
-                         "C N CA C O CB CG CD NE CZ NH1 NH2 N CA C O CB SG "
-                         "N CA C O N CA C O CB OG N CA C O CB CG CD OE1 NE2 "
-                         "N CA C O N CA C O N CA C O N CA C O CB OG N CA C "
-                         "O CB OG1 CG2 N CA C O CB SG N CA C O CB CG CD N "
-                         "CA C O N CA C O CB CG CD1 CD2 N CA C O CB CG CD NE "
-                         "CZ NH1 NH2 N CA C O CB SG N CA C O CB SG N CA C O "
-                         "CB OG N CA C O CB CG1 CG2 CD1 N CA C O CB CG CD1 "
-                         "CD2 NE1 CE2 CE3 CZ2 CZ3 CH2 N CA C O N CA C O CB "
-                         "CG CD1 CD2 NE1 CE2 CE3 CZ2 CZ3 CH2 N CA C O CB SG "
-                         "N CA C O N CA C O CB CG OD1 OD2 N CA C O CB OG N "
-                         "CA C O CB CG CD OE1 OE2 N CA C O CB CG CD N CA C O "
-                         "CB CG CD1 CD2 CE1 CE2 CZ OH N CA C O CB SG N CA C "
-                         "O N CA C O CB CG CD NE CZ NH1 NH2 N CA C O CB OG1 "
-                         "CG2 N CA C O CB SG N CA C O CB CG CD OE1 OE2 N CA "
-                         "C O CB CG OD1 ND2 N CA C O CB CG CD CE NZ N CA C O "
-                         "CB SG N CA C O CB CG CD1 CD2 NE1 CE2 CE3 CZ2 CZ3 "
-                         "CH2 N CA C O CB OG N CA C O N CA C O CB CG CD OE1 "
-                         "OE2 N CA C O CB CG CD NE CZ NH1 NH2 N CA C O CB OG "
-                         "N CA C O CB CG OD1 OD2 N CA C O CB CG ND1 CD2 CE1 "
-                         "NE2 N CA C O CB CG CD NE CZ NH1 NH2 N CA C O CB SG "
-                         "N CA C O N CA C O CB N CA C O CB N CA C O CB CG1 "
-                         "CG2 N CA C O N CA C O CB CG OD1 ND2 N CA C O CB CG "
-                         "CD N CA C O CB CG CD N CA C O CB SG N CA C O N CA "
-                         "C O CB CG CD OE1 NE2 N CA C O CB CG OD1 OD2 N CA C "
-                         "O CB CG CD NE CZ NH1 NH2 N CA C O CB SG N CA C O "
-                         "CB SG N CA C O CB OG N CA C O CB CG1 CG2 N CA C O "
-                         "CB CG ND1 CD2 CE1 NE2 N CA C O N CA C O CB CG CD1 "
-                         "CD2 NE1 CE2 CE3 CZ2 CZ3 CH2 N CA C O CB SG N CA C "
-                         "O N CA C O N CA C O N CA C O CB CG OD1 ND2 N CA C O "
-                         "CB CG OD1 OD2 N CA C O CB CG CD1 CD2 CE1 CE2 CZ OH "
-                         "N CA C O CB SG N CA C O CB OG N CA C O N CA C O N "
-                         "CA C O CB CG OD1 ND2 N CA C O CB SG N CA C O CB CG "
-                         "CD OE1 NE2 N CA C O CB CG CD1 CD2 CE1 CE2 CZ OH N "
-                         "CA C O CB CG CD NE CZ NH1 NH2 N CA C O CB SG")
+                     "C N CA C O CB CD CG CZ NE NH1 NH2 "
+                     "N CA C O CB SG N CA C O N CA C O "
+                     "CB OG N CA C O CB CD CG NE2 OE1 N "
+                     "CA C O N CA C O N CA C O N CA C O "
+                     "CB OG N CA C O CB CG2 OG1 N CA C O "
+                     "CB SG N CA C O CB CD CG N CA C O N "
+                     "CA C O CB CG CD1 CD2 N CA C O CB CG "
+                     "CD NE CZ NH1 NH2 N CA C O CB SG N "
+                     "CA C O CB SG N CA C O CB OG N CA C "
+                     "O CB CD1 CG1 CG2 N CA C O CB CD1 CD2 "
+                     "CE2 CE3 CG CH2 CZ2 CZ3 NE1 N CA C O "
+                     "N CA C O CB CD1 CD2 CE2 CE3 CG CH2 "
+                     "CZ2 CZ3 NE1 N CA C O CB SG N CA C O "
+                     "N CA C O CB CG OD1 OD2 N CA C O CB OG "
+                     "N CA C O CB CG CD OE1 OE2 N CA C O CB "
+                     "CD CG N CA C O CB CD1 CD2 CE1 CE2 CG "
+                     "CZ OH N CA C O CB SG N CA C O N CA C "
+                     "O CB CD CG CZ NE NH1 NH2 N CA C O CB "
+                     "CG2 OG1 N CA C O CB SG N CA C O CB CD "
+                     "CG OE1 OE2 N CA C O CB CG ND2 OD1 N CA "
+                     "C O CB CD CE CG NZ N CA C O CB SG N CA "
+                     "C O CB CD1 CD2 CE2 CE3 CG CH2 CZ2 CZ3 "
+                     "NE1 N CA C O CB OG N CA C O N CA C O CB "
+                     "CD CG OE1 OE2 N CA C O CB CD CG CZ NE "
+                     "NH1 NH2 N CA C O CB OG N CA C O CB CG "
+                     "OD1 OD2 N CA C O CB CD2 CE1 CG ND1 NE2 N "
+                     "CA C O CB CD CG CZ NE NH1 NH2 N CA C O CB "
+                     "SG N CA C O N CA C O CB N CA C O CB N CA "
+                     "C O CB CG1 CG2 N CA C O N CA C O CB CG "
+                     "ND2 OD1 N CA C O CB CD CG N CA C O CB CD "
+                     "CG N CA C O CB SG N CA C O N CA C O CB CD "
+                     "CG NE2 OE1 N CA C O CB CG OD1 OD2 N CA C O "
+                     "CB CD CG CZ NE NH1 NH2 N CA C O CB SG N CA "
+                     "C O CB SG N CA C O CB OG N CA C O CB CG1 CG2 "
+                     "N CA C O CB CD2 CE1 CG ND1 NE2 N CA C O N CA "
+                     "C O CB CD1 CD2 CE2 CE3 CG CH2 CZ2 CZ3 NE1 N CA "
+                     "C O CB SG N CA C O N CA C O N CA C O N CA C O "
+                     "CB CG OD1 ND2 N CA C O CB CG OD1 OD2 N CA C O "
+                     "CB CD1 CD2 CE1 CE2 CG CZ OH N CA C O CB SG N CA "
+                     "C O CB OG N CA C O N CA C O N CA C O CB CG OD1 "
+                     "ND2 N CA C O CB SG N CA C O CB CD CG NE2 OE1 N "
+                     "CA C O CB CD1 CD2 CE1 CE2 CG CZ OH N CA C O CB "
+                     "CD CG CZ NE NH1 NH2 N CA C O CB SG")
         self.assertEqual(" ".join(atom.element for atom in chain.get_atoms()),
-                         "C N C C O C C C N C N N N C C O C S N C C O N C C O "
-                         "C O N C C O C C C O N N C C O N C C O N C C O N C C "
-                         "O C O N C C O C O C N C C O C S N C C O C C C N C C "
-                         "O N C C O C C C C N C C O C C C N C N N N C C O C S "
-                         "N C C O C S N C C O C O N C C O C C C C N C C O C C "
-                         "C C N C C C C C N C C O N C C O C C C C N C C C C C "
-                         "N C C O C S N C C O N C C O C C O O N C C O C O N C "
-                         "C O C C C O O N C C O C C C N C C O C C C C C C C O "
-                         "N C C O C S N C C O N C C O C C C N C N N N C C O C "
-                         "O C N C C O C S N C C O C C C O O N C C O C C O N N "
-                         "C C O C C C C N N C C O C S N C C O C C C C N C C C "
-                         "C C N C C O C O N C C O N C C O C C C O O N C C O C "
-                         "C C N C N N N C C O C O N C C O C C O O N C C O C C "
-                         "N C C N N C C O C C C N C N N N C C O C S N C C O N "
-                         "C C O C N C C O C N C C O C C C N C C O N C C O C C "
-                         "O N N C C O C C C N C C O C C C N C C O C S N C C O "
-                         "N C C O C C C O N N C C O C C O O N C C O C C C N C "
-                         "N N N C C O C S N C C O C S N C C O C O N C C O C C "
-                         "C N C C O C C N C C N N C C O N C C O C C C C N C C "
-                         "C C C N C C O C S N C C O N C C O N C C O N C C O C "
-                         "C O N N C C O C C O O N C C O C C C C C C C O N C C "
-                         "O C S N C C O C O N C C O N C C O N C C O C C O N N "
-                         "C C O C S N C C O C C C O N N C C O C C C C C C C O "
-                         "N C C O C C C N C N N N C C O C S")
+                         "C N C C O C C C C N N N N C C O C S N C C O N C C "
+                         "O C O N C C O C C C N O N C C O N C C O N C C O N "
+                         "C C O C O N C C O C C O N C C O C S N C C O C C C "
+                         "N C C O N C C O C C C C N C C O C C C N C N N N C "
+                         "C O C S N C C O C S N C C O C O N C C O C C C C N "
+                         "C C O C C C C C C C C C N N C C O N C C O C C C C "
+                         "C C C C C N N C C O C S N C C O N C C O C C O O N "
+                         "C C O C O N C C O C C C O O N C C O C C C N C C O "
+                         "C C C C C C C O N C C O C S N C C O N C C O C C C "
+                         "C N N N N C C O C C O N C C O C S N C C O C C C O "
+                         "O N C C O C C N O N C C O C C C C N N C C O C S N "
+                         "C C O C C C C C C C C C N N C C O C O N C C O N C "
+                         "C O C C C O O N C C O C C C C N N N N C C O C O N "
+                         "C C O C C O O N C C O C C C C N N N C C O C C C C "
+                         "N N N N C C O C S N C C O N C C O C N C C O C N C "
+                         "C O C C C N C C O N C C O C C N O N C C O C C C N "
+                         "C C O C C C N C C O C S N C C O N C C O C C C N O "
+                         "N C C O C C O O N C C O C C C C N N N N C C O C S "
+                         "N C C O C S N C C O C O N C C O C C C N C C O C C "
+                         "C C N N N C C O N C C O C C C C C C C C C N N C C "
+                         "O C S N C C O N C C O N C C O N C C O C C O N N C "
+                         "C O C C O O N C C O C C C C C C C O N C C O C S N "
+                         "C C O C O N C C O N C C O N C C O C C O N N C C O "
+                         "C S N C C O C C C N O N C C O C C C C C C C O N C "
+                         "C O C C C C N N N N C C O C S")
 
 
 class ParseReal(unittest.TestCase):
@@ -584,70 +597,51 @@ class ParseReal(unittest.TestCase):
                          "HOH HOH HOH HOH HOH HOH HOH HOH HOH HOH HOH HOH "
                          "HOH HOH")
         self.assertEqual(" ".join(atom.name for atom in chain.get_atoms()),
-                         "N CA C O CB CG SE CE N CA C O CB CG OD1 OD2 N CA "
-                         "C O CB CG1 CG2 CD1 N CA C O CB CG CD NE CZ NH1 "
-                         "NH2 N CA C O CB CG CD OE1 NE2 N CA C O N CA C O "
-                         "CB CG CD N CA C O CB CG CD CE NZ N CA C O CB CG "
-                         "CD OE1 OE2 N CA C O CB CG CD N CA C O CB CG CD1 "
-                         "CD2 CE1 CE2 CZ N CA C O CB CG CD NE CZ NH1 NH2 N "
-                         "CA C O CB CG OD1 OD2 N CA C O CB CG CD1 CD2 CE1 "
-                         "CE2 CZ OH N CA C O CB CG1 CG2 N CA C O CB CG OD1 "
-                         "OD2 N CA C O CB CG CD NE CZ NH1 NH2 N CA C O CB "
-                         "CG CD1 CD2 CE1 CE2 CZ N CA C O CB CG CD1 CD2 CE1 "
-                         "CE2 CZ OH N CA C O CB CG CD CE NZ N CA C O CB "
-                         "OG1 CG2 N CA C O CB CG CD1 CD2 N CA C O CB CG CD "
-                         "NE CZ NH1 NH2 N CA C O CB N CA C O CB CG CD OE1 "
-                         "OE2 N CA C O CB CG CD OE1 NE2 N CA C O CB N CA C "
-                         "O CB OG N CA C O CB CG CD OE1 NE2 N CA C O CB CG "
-                         "CD OE1 OE2 N CA C O CB CG1 CG2 N CA C O CB CG CD "
-                         "CE NZ N CA C O CB CG OD1 ND2 N CA C O CB CG CD1 "
-                         "CD2 NE1 CE2 CE3 CZ2 CZ3 CH2 N CA C O CB CG SE CE "
-                         "N CA C O CB OG1 CG2 N CA C O CB CG CD OE1 OE2 N "
-                         "CA C O CB OG1 CG2 N CA C O CB CG CD1 CD2 N CA C "
-                         "O CB CG CD1 CD2 N CA C O CB CG1 CG2 N CA C O CB "
-                         "CG CD OE1 NE2 N CA C O CB CG OD1 ND2 N CA C O CB "
-                         "N CA C O CB CG OD1 ND2 N CA C O CB CG CD N CA C "
-                         "O CB CG OD1 OD2 N CA C O CB SG N CA C O CB CG CD "
-                         "CE NZ N CA C O CB OG1 CG2 N CA C O CB CG1 CG2 "
-                         "CD1 N CA C O CB CG CD1 CD2 N CA C O CB CG CD CE "
-                         "NZ N CA C O CB N CA C O CB CG CD1 CD2 N CA C O N "
-                         "CA C O CB CG CD N CA C O N CA C O CB N CA C O CB "
-                         "OG1 CG2 N CA C O CB CG CD1 CD2 N CA C O CB CG CD "
-                         "OE1 OE2 N CA C O CB CG CD OE1 OE2 N CA C O CB CG "
-                         "SE CE N CA C O CB CG SE CE N CA C O CB OG1 CG2 N "
-                         "CA C O CB N CA C O CB SG N CA C O CB CG CD OE1 "
-                         "NE2 N CA C O OXT O O O O O O O O O O O O O O O O "
-                         "O O O O O O O O O O O O O O O O O O O O O O O O "
-                         "O O O O O O O O O O O O O O O O O O O O O O O O "
-                         "O O O O O O O O O O O O O O O O O O O O O O O O")
+                         "N CA C O CB CE CG SE N CA C O CB CG OD1 OD2 N CA C O CB CD1 CG1 CG2 N CA C O CB CD "
+                         "CG CZ NE NH1 NH2 N CA C O CB CD CG NE2 OE1 N CA C O N CA C O CB CD CG N CA C O CB "
+                         "CD CE CG NZ N CA C O CB CD CG OE1 OE2 N CA C O CB CD CG N CA C O CB CD1 CD2 CE1 CE2 CG "
+                         "CZ N CA C O CB CD CG CZ NE NH1 NH2 N CA C O CB CG OD1 OD2 N CA C O CB CD1 CD2 CE1 CE2 CG "
+                         "CZ OH N CA C O CB CG1 CG2 N CA C O CB CG OD1 OD2 N CA C O CB CD CG CZ NE NH1 NH2 N CA "
+                         "C O CB CD1 CD2 CE1 CE2 CG CZ N CA C O CB CD1 CD2 CE1 CE2 CG CZ OH N CA C O CB CD CE CG NZ "
+                         "N CA C O CB CG2 OG1 N CA C O CB CD1 CD2 CG N CA C O CB CD CG CZ NE NH1 NH2 N CA C O "
+                         "CB N CA C O CB CD CG OE1 OE2 N CA C O CB CD CG NE2 OE1 N CA C O CB N CA C O CB OG "
+                         "N CA C O CB CD CG NE2 OE1 N CA C O CB CD CG OE1 OE2 N CA C O CB CG1 CG2 N CA C O CB "
+                         "CD CE CG NZ N CA C O CB CG ND2 OD1 N CA C O CB CD1 CD2 CE2 CE3 CG CH2 CZ2 CZ3 NE1 N CA C O "
+                         "CB CE CG SE N CA C O CB CG2 OG1 N CA C O CB CD CG OE1 OE2 N CA C O CB CG2 OG1 N CA C "
+                         "O CB CD1 CD2 CG N CA C O CB CD1 CD2 CG N CA C O CB CG1 CG2 N CA C O CB CD CG NE2 OE1 N "
+                         "CA C O CB CG ND2 OD1 N CA C O CB N CA C O CB CG ND2 OD1 N CA C O CB CD CG N CA C "
+                         "O CB CG OD1 OD2 N CA C O CB SG N CA C O CB CD CE CG NZ N CA C O CB CG2 OG1 N CA C "
+                         "O CB CD1 CG1 CG2 N CA C O CB CD1 CD2 CG N CA C O CB CD CE CG NZ N CA C O CB N CA C "
+                         "O CB CD1 CD2 CG N CA C O N CA C O CB CD CG N CA C O N CA C O CB N CA C O CB "
+                         "CG2 OG1 N CA C O CB CD1 CD2 CG N CA C O CB CD CG OE1 OE2 N CA C O CB CD CG OE1 OE2 N CA "
+                         "C O CB CE CG SE N CA C O CB CE CG SE N CA C O CB CG2 OG1 N CA C O CB N CA C O "
+                         "CB SG N CA C O CB CD CG NE2 OE1 N CA C O OXT O O O O O O O O O O O O O O "
+                         "O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O "
+                         "O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O "
+                         "O O O O O O O O O O O O O O")
         self.assertEqual(" ".join(atom.element for atom in chain.get_atoms()),
-                         "N C C O C C SE C N C C O C C O O N C C O C C C C "
-                         "N C C O C C C N C N N N C C O C C C O N N C C O "
-                         "N C C O C C C N C C O C C C C N N C C O C C C O "
-                         "O N C C O C C C N C C O C C C C C C C N C C O C "
-                         "C C N C N N N C C O C C O O N C C O C C C C C C "
-                         "C O N C C O C C C N C C O C C O O N C C O C C C "
-                         "N C N N N C C O C C C C C C C N C C O C C C C C "
-                         "C C O N C C O C C C C N N C C O C O C N C C O C "
-                         "C C C N C C O C C C N C N N N C C O C N C C O C "
-                         "C C O O N C C O C C C O N N C C O C N C C O C O "
-                         "N C C O C C C O N N C C O C C C O O N C C O C C "
-                         "C N C C O C C C C N N C C O C C O N N C C O C C "
-                         "C C N C C C C C N C C O C C SE C N C C O C O C N "
-                         "C C O C C C O O N C C O C O C N C C O C C C C N "
-                         "C C O C C C C N C C O C C C N C C O C C C O N N "
-                         "C C O C C O N N C C O C N C C O C C O N N C C O "
-                         "C C C N C C O C C O O N C C O C S N C C O C C C "
-                         "C N N C C O C O C N C C O C C C C N C C O C C C "
-                         "C N C C O C C C C N N C C O C N C C O C C C C N "
-                         "C C O N C C O C C C N C C O N C C O C N C C O C "
-                         "O C N C C O C C C C N C C O C C C O O N C C O C "
-                         "C C O O N C C O C C SE C N C C O C C SE C N C C "
-                         "O C O C N C C O C N C C O C S N C C O C C C O N "
-                         "N C C O O O O O O O O O O O O O O O O O O O O O "
-                         "O O O O O O O O O O O O O O O O O O O O O O O O "
-                         "O O O O O O O O O O O O O O O O O O O O O O O O "
-                         "O O O O O O O O O O O O O O O O O O O O O")
+                         "N C C O C C C SE N C C O C C O O N C C O C C C C N C C O C C "
+                         "C C N N N N C C O C C C N O N C C O N C C O C C C N C C O C "
+                         "C C C N N C C O C C C O O N C C O C C C N C C O C C C C C C "
+                         "C N C C O C C C C N N N N C C O C C O O N C C O C C C C C C "
+                         "C O N C C O C C C N C C O C C O O N C C O C C C C N N N N C "
+                         "C O C C C C C C C N C C O C C C C C C C O N C C O C C C C N "
+                         "N C C O C C O N C C O C C C C N C C O C C C C N N N N C C O "
+                         "C N C C O C C C O O N C C O C C C N O N C C O C N C C O C O "
+                         "N C C O C C C N O N C C O C C C O O N C C O C C C N C C O C "
+                         "C C C N N C C O C C N O N C C O C C C C C C C C C N N C C O "
+                         "C C C SE N C C O C C O N C C O C C C O O N C C O C C O N C C "
+                         "O C C C C N C C O C C C C N C C O C C C N C C O C C C N O N "
+                         "C C O C C N O N C C O C N C C O C C N O N C C O C C C N C C "
+                         "O C C O O N C C O C S N C C O C C C C N N C C O C C O N C C "
+                         "O C C C C N C C O C C C C N C C O C C C C N N C C O C N C C "
+                         "O C C C C N C C O N C C O C C C N C C O N C C O C N C C O C "
+                         "C O N C C O C C C C N C C O C C C O O N C C O C C C O O N C "
+                         "C O C C C SE N C C O C C C SE N C C O C C O N C C O C N C C O "
+                         "C S N C C O C C C N O N C C O O O O O O O O O O O O O O O O "
+                         "O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O "
+                         "O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O "
+                         "O O O O O O O O O O O O O O")
 
     def test_model_numbering(self):
         """Preserve model serial numbers during I/O."""
@@ -698,8 +692,7 @@ class Exposure(unittest.TestCase):
         """HSExposureCA."""
         hse = HSExposureCA(self.model, self.radius)
         residues = self.a_residues
-        self.assertEqual(0, len(residues[0].xtra))
-        self.assertEqual(0, len(residues[1].xtra))
+        self.assertFalse(residues[0].xtra)
         self.assertEqual(3, len(residues[2].xtra))
         self.assertAlmostEqual(0.81250973133184456, residues[2].xtra["EXP_CB_PCB_ANGLE"])
         self.assertEqual(14, residues[2].xtra["EXP_HSE_A_D"])
@@ -713,13 +706,13 @@ class Exposure(unittest.TestCase):
         self.assertAlmostEqual(0.77124014456278489, residues[-2].xtra["EXP_CB_PCB_ANGLE"])
         self.assertEqual(24, residues[-2].xtra["EXP_HSE_A_D"])
         self.assertEqual(24, residues[-2].xtra["EXP_HSE_A_U"])
-        self.assertEqual(0, len(residues[-1].xtra))
+        self.assertFalse(residues[-1].xtra)
 
     def test_HSExposureCB(self):
         """HSExposureCB."""
         hse = HSExposureCB(self.model, self.radius)
         residues = self.a_residues
-        self.assertEqual(0, len(residues[0].xtra))
+        self.assertFalse(residues[0].xtra)
         self.assertEqual(2, len(residues[1].xtra))
         self.assertEqual(20, residues[1].xtra["EXP_HSE_B_D"])
         self.assertEqual(5, residues[1].xtra["EXP_HSE_B_U"])
@@ -741,7 +734,7 @@ class Exposure(unittest.TestCase):
         """HSExposureCN."""
         hse = ExposureCN(self.model, self.radius)
         residues = self.a_residues
-        self.assertEqual(0, len(residues[0].xtra))
+        self.assertFalse(residues[0].xtra)
         self.assertEqual(1, len(residues[1].xtra))
         self.assertEqual(25, residues[1].xtra["EXP_CN"])
         self.assertEqual(1, len(residues[2].xtra))
@@ -832,8 +825,8 @@ class TransformTests(unittest.TestCase):
         Returns the sum of the positions of atoms in an entity along
         with the number of atoms.
         """
-        if hasattr(o, "get_coord"):
-            return o.get_coord(), 1
+        if hasattr(o, "coord"):
+            return o.coord, 1
         total_pos = numpy.array((0.0,0.0,0.0))
         total_count = 0
         for p in o.get_list():
@@ -875,7 +868,7 @@ class CopyTests(unittest.TestCase):
     def test_atom_copy(self):
         aa = self.a.copy()
         self.assertFalse(self.a is aa)
-        self.assertFalse(self.a.get_coord() is aa.get_coord())
+        self.assertFalse(self.a.coord is aa.coord)
 
     def test_entitity_copy(self):
         """Make a copy of a residue."""
