@@ -13,7 +13,7 @@ import itertools
 
 import numpy
 from Bio.File import as_handle
-
+from Bio import BiopythonDeprecationWarning
 from Bio.PDB.PDBExceptions import \
         PDBConstructionException, PDBConstructionWarning
 from Bio.PDB.StructureBuilder import StructureBuilder
@@ -137,9 +137,9 @@ class PDBParser(object):
     
     def _parse_coordinates(self, coords_trailer):
         "Parse the atomic data in the PDB file." 
+
         # performance
         asarray = numpy.asarray
-        samplearray=numpy.empty((3,), dtype=numpy.float32)
         split = str.split
         strip = str.strip
         
@@ -194,8 +194,7 @@ class PDBParser(object):
                 residue_id=(hetero_flag, resseq, icode)
                 # atomic coordinates                                         
                 try:
-                    #coord_array = asarray((line[30:38], line[38:46], line[46:54]), dtype=numpy.float32)
-                    samplearray[:] = (line[30:38], line[38:46], line[46:54])
+                    coord_array = asarray([line[30:38], line[38:46], line[46:54]], dtype=numpy.float32)
                 except:
                     #Should we allow parsing to continue in permissive mode?
                     #If so what coordindates should we default to?  Easier to abort!
@@ -236,16 +235,13 @@ class PDBParser(object):
                         self._handle_PDB_exception(message, structure_builder.line_counter) 
                 # init atom
                 try:
-                    structure_builder.init_atom(name, numpy.copy(samplearray), bfactor, occupancy, altloc,
+                    structure_builder.init_atom(name, coord_array, bfactor, occupancy, altloc,
                                                 fullname, serial_number, element)
-
-                    # structure_builder.init_atom(name, coord_array, bfactor, occupancy, altloc,
-                    #                             fullname, serial_number, element)
                 except PDBConstructionException, message:
                     self._handle_PDB_exception(message, structure_builder.line_counter)
             elif(record_type=='ANISOU'):
                 try:   
-                    anisou_array = asarray([line[28:35], line[35:42], line[43:49], line[49:56], line[56:63], line[63:70]], dtype=numpy.float32)
+                    anisou_array = asarray([line[28:35], line[35:42], line[43:49], line[49:56], line[56:63], line[63:70]])
                     # U's are scaled by 10^4 
                     anisou_array=anisou_array/10000
                 except ValueError, message:
@@ -269,8 +265,11 @@ class PDBParser(object):
                 model_open=1
                 current_chain_id=None
                 current_residue_id=None
-            elif(record_type=='END   ' or record_type=='CONECT'):
+            elif(record_type=='END   '):
                 # End of atomic data, return the trailer
+                # Check for presence of lines after END.
+                return coords_trailer
+            elif (record_type=='CONECT'):
                 return coords_trailer
             elif(record_type=='ENDMDL'):
                 model_open=0
@@ -278,16 +277,16 @@ class PDBParser(object):
                 current_residue_id=None
             elif(record_type=='SIGUIJ'):
                 # standard deviation of anisotropic B factor
-                siguij_array = asarray([line[28:35], line[35:42], line[42:49], line[49:56], line[56:63], line[63:70]], dtype=numpy.float32)
+                siguij_array = asarray([line[28:35], line[35:42], line[42:49], line[49:56], line[56:63], line[63:70]])
                 # U sigma's are scaled by 10^4
                 siguij_array=siguij_array/10000   
                 structure_builder.set_siguij(siguij_array)
             elif(record_type=='SIGATM'):
                 # standard deviation of atomic positions
-                siguij_array = asarray([line[30:38], line[38:45], line[46:54], line[54:60], line[60:66]], dtype=numpy.float32)
+                siguij_array = asarray([line[30:38], line[38:45], line[46:54], line[54:60], line[60:66]])
                 structure_builder.set_sigatm(sigatm_array)
         # EOF (does not end in END or CONECT)
-        return []
+        return iter([])
 
     def _handle_PDB_exception(self, message, line_counter):
         """

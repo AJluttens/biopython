@@ -66,9 +66,6 @@ class Residue(Entity):
                 "Atom %s defined twice in residue %s" % (atom_id, self))
         Entity.add(self, atom)
 
-    def sort(self):
-        self.get_list().sort(self._sort)
-
     def flag_disordered(self):
         "Set the disordered flag."
         self.disordered=1
@@ -140,7 +137,7 @@ class DisorderedResidue(DisorderedEntityWrapper):
         resname=residue.get_resname()
         # add chain parent to residue
         chain=self.parent
-        residue.set_parent(chain)
+        residue.parent = chain
         assert(resname not in self.child_dict)
         self[resname]=residue
         self.disordered_select(resname)

@@ -240,7 +240,7 @@ class DSSP(AbstractResiduePropertyMap):
                     # All atoms in the disordered residue should have the same
                     # altloc, so it suffices to check the altloc of the first
                     # atom.
-                    altloc = res.child_dict[rk].get_list()[0].get_altloc()
+                    altloc = res.child_dict[rk].get_list()[0].altloc
                     if altloc in tuple('A1 '):
                         res.disordered_select(rk)
                         break
@@ -260,18 +260,20 @@ class DSSP(AbstractResiduePropertyMap):
                 # contains blank, A or 1, then use it.  Otherwise, look for HET
                 # residues of the same seq+icode.  If not such HET residues are
                 # found, just accept the current one.
-                altlocs = set(a.get_altloc() for a in res.get_unpacked_list())
+                altlocs = set(a.altloc for a in res.get_unpacked_list())
                 if altlocs.isdisjoint('A1 '):
                     # Try again with all HETATM other than water
                     res_seq_icode = resid2code(res_id)
                     for r in chain:
                         if r.id[0] not in (' ', 'W'):
                             if (resid2code(r.id) == res_seq_icode and
-                                r.get_list()[0].get_altloc() in tuple('A1 ')):
+                                r.get_list()[0].altloc in tuple('A1 ')):
                                 res = r
                                 break
 
             aa, ss, acc, phi, psi = dssp_dict[key]
+            if not isinstance(res.xtra, dict):
+                res.xtra = {}
             res.xtra["SS_DSSP"] = ss
             res.xtra["EXP_DSSP_ASA"] = acc
             res.xtra["PHI_DSSP"] = phi

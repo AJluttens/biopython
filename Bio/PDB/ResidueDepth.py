@@ -116,7 +116,7 @@ def residue_depth(residue, surface):
     length=len(atom_list)
     d=0
     for atom in atom_list:
-        coord=atom.get_coord()
+        coord=atom.coord
         d=d+min_dist(coord, surface)
     return d/length
 
@@ -124,7 +124,7 @@ def ca_depth(residue, surface):
     if "CA" not in residue:
         return None
     ca=residue["CA"]
-    coord=ca.get_coord()
+    coord=ca.coord
     return min_dist(coord, surface)
 
 class ResidueDepth(AbstractPropertyMap):
@@ -152,6 +152,8 @@ class ResidueDepth(AbstractPropertyMap):
             depth_list.append((residue, (rd, ca_rd)))
             depth_keys.append((chain_id, res_id))
             # Update xtra information
+            if not isinstance(residue.xtra, dict):
+                residue.xtra = {}
             residue.xtra['EXP_RD']=rd
             residue.xtra['EXP_RD_CA']=ca_rd
         AbstractPropertyMap.__init__(self, depth_dict, depth_keys, depth_list)

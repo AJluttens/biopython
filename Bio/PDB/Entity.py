@@ -6,6 +6,8 @@
 from copy import copy
     
 from Bio.PDB.PDBExceptions import PDBConstructionException, PDBException
+import warnings
+from Bio import BiopythonDeprecationWarning
 
 """Base class for Residue, Chain, Model and Structure classes.
 
@@ -22,9 +24,9 @@ class Entity(object):
         self.id=id
         self.full_id=None
         self.parent=None
-        self.child_dict={}
+        self.child_dict={} # keeping the name for historical purposes
         # Dictionary that keeps addictional properties
-        self.xtra={}
+        self.xtra=None
     
     # Special methods   
 
@@ -37,7 +39,8 @@ class Entity(object):
         return self.child_dict[id]
 
     def __delitem__(self, id):
-        "Remove a child."
+        "Remove a child. Same as detaching"
+        self.child_dict[id].parent = None
         del self.child_dict[id]
 
     def __contains__(self, id):
@@ -51,57 +54,17 @@ class Entity(object):
 
     # Public methods    
 
-    def get_level(self):
-        """Return level in hierarchy.
-
-        A - atom
-        R - residue
-        C - chain
-        M - model
-        S - structure
-        """
-        return self.level
-
-    def set_parent(self, entity):
-        "Set the parent Entity object."
-        self.parent=entity
-
-    def detach_parent(self):
-        "Detach the parent."
-        self.parent=None
-
-    def detach_child(self, id):
-        "Remove a child."
-        child=self.child_dict[id] 
-        child.detach_parent()
-        del self.child_dict[id]
-
     def add(self, entity):
         "Add a child to the Entity."
         entity_id=entity.id
         if entity_id in self:
             raise PDBConstructionException( \
                 "%s defined twice" % str(entity_id))
-        entity.set_parent(self)
+        entity.parent = self
         self.child_dict[entity_id]=entity
-    # 
-    # def insert(self, pos, entity):
-    #     "Add a child to the Entity at a specified position."
-    #     entity_id=entity.id
-    #     if entity_id in self:
-    #         raise PDBConstructionException( \
-    #             "%s defined twice" % str(entity_id))
-    #     entity.set_parent(self)
-    #     # Farfetched..
-    #     pre_pos = [(k,v) for i, (k,v) in enumerate(self.child_dict.iteritems()) if i<pos]
-    #     post_pos = [(k,v) for i, (k,v) in enumerate(self.child_dict.iteritems()) if i>=pos]
-    #     new_order = pre_pos+[(entity_id, entity)]+post_pos
-    #     self.child_dict = OrderedDict()
-    #     for k,v in new_order:
-    #         self.child_dict[k]=v 
 
     def get_list(self):
-        "Return a copy of the list of children."
+        "Return a copy of the sorted list of children."
         return sorted(self.child_dict.values())
 
     def get_full_id(self):
@@ -158,9 +121,12 @@ class Entity(object):
         shallow = copy(self)
 
         shallow.child_dict = {}
-        shallow.xtra = copy(self.xtra)
+        if isinstance(shallow.xtra, dict):
+            shallow.xtra = copy(self.xtra)
+        else:
+            shallow.xtra = None
 
-        shallow.detach_parent()
+        shallow.parent = None
 
         for child in self:
             shallow.add(child.copy())
@@ -180,10 +146,18 @@ class DisorderedEntityWrapper(object):
         self.id=id
         self.child_dict={}
         self.selected_child=None
-        self.parent=None    
-
+        self.parent=None
+        
     # Special methods
-
+    # __setattr_ might not seem a good idea, but is for consistency of removing
+    # all set/get methods.
+    def __setattr__(self, name, value):
+        "Propagates certain attributes down the child tree"
+        if name == 'parent':
+            for child in self.child_dict.values():
+                child.__dict__['parent'] = value
+        self.__dict__[name] = value
+        
     def __getattr__(self, method):
         "Forward the method call to the selected child."
         if not hasattr(self, 'selected_child'):
@@ -221,18 +195,6 @@ class DisorderedEntityWrapper(object):
 
     # Public methods         
 
-    def detach_parent(self):
-        "Detach the parent"
-        self.parent=None
-        for child in self.disordered_get_list():
-            child.detach_parent()
-
-    def set_parent(self, parent):
-        "Set the parent for the object and its children."
-        self.parent=parent
-        for child in self.disordered_get_list():
-            child.set_parent(parent)
-
     def disordered_select(self, id):
         """Select the object with given id as the currently active object.
 
@@ -267,5 +229,5 @@ class DisorderedEntityWrapper(object):
         return self.child_dict[id]
 
     def disordered_get_list(self):
-        "Return list of children."
-        return self.child_dict.values()
+        "Return sorted list of children."
+        return sorted(self.child_dict.values())

@@ -79,11 +79,11 @@ class PDBIO(object):
             element = element.rjust(2)
         else:
             element = "  "
-        name=atom.get_fullname()
-        altloc=atom.get_altloc()
-        x, y, z=atom.get_coord()
-        bfactor=atom.get_bfactor()
-        occupancy=atom.get_occupancy()
+        name=atom.fullname
+        altloc=atom.altloc
+        x, y, z=atom.coord
+        bfactor=atom.bfactor
+        occupancy=atom.occupancy
         args=(record_type, atom_number, name, altloc, resname, chain_id,
             resseq, icode, x, y, z, occupancy, bfactor, segid,
             element, charge)

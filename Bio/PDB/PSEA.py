@@ -67,7 +67,7 @@ def psea2HEC(pseq):
     return seq
 
 def annotate(m, ss_seq):
-    """Apply seconardary structure information to residues in model."""
+    """Apply secondary structure information to residues in model."""
     c=m.get_list()[0]
     all=c.get_list()
     residues=[]
@@ -79,7 +79,10 @@ def annotate(m, ss_seq):
     if not (L==len(ss_seq)):
         raise ValueError("Length mismatch %i %i" % (L, len(ss_seq)))
     for i in range(0, L):
-        residues[i].xtra["SS_PSEA"]=ss_seq[i]
+        res = residues[i]
+        if not isinstance(res.xtra, dict):
+            res.xtra = {}
+            res.xtra["SS_PSEA"]=ss_seq[i]
     #os.system("rm "+fname)
 
 class PSEA(object):

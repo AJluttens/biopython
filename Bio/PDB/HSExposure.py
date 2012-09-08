@@ -95,6 +95,8 @@ class _AbstractHSExposure(AbstractPropertyMap):
                 hse_list.append((r2, (hse_u, hse_d, angle)))
                 hse_keys.append((chain_id, res_id))
                 # Add to xtra
+                if not isinstance(r2.xtra, dict):
+                    r2.xtra = {}
                 r2.xtra[hse_up_key]=hse_u
                 r2.xtra[hse_down_key]=hse_d
                 if angle_key:
@@ -307,6 +309,8 @@ class ExposureCN(AbstractPropertyMap):
                 fs_list.append((r1, fs))
                 fs_keys.append((chain_id, res_id))
                 # Add to xtra
+                if not isinstance(r1.xtra, dict):
+                    r1.xtra = {}
                 r1.xtra['EXP_CN']=fs
         AbstractPropertyMap.__init__(self, fs_map, fs_keys, fs_list)
 

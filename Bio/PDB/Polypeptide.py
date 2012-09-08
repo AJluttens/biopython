@@ -198,6 +198,8 @@ class Polypeptide(list):
         lng=len(self)
         for i in range(0, lng):
             res=self[i]
+            if not isinstance(res.xtra, dict):
+                res.xtra = {}
             try:
                 n=res['N'].get_vector()
                 ca=res['CA'].get_vector()
@@ -248,6 +250,8 @@ class Polypeptide(list):
             tau_list.append(tau)
             # Put tau in xtra dict of residue
             res=ca_list[i+2].parent
+            if not isinstance(res.xtra, dict):
+                res.xtra = {}
             res.xtra["TAU"]=tau
         return tau_list
 
@@ -262,6 +266,8 @@ class Polypeptide(list):
             theta_list.append(theta)
             # Put tau in xtra dict of residue
             res=ca_list[i+1].parent
+            if not isinstance(res.xtra, dict):
+                res.xtra = {}
             res.xtra["THETA"]=theta
         return theta_list
 
@@ -329,7 +335,7 @@ class _PPBuilder:
         """
         is_connected=self._is_connected
         accept=self._accept
-        level=entity.get_level()
+        level=entity.level
         # Decide wich entity we are dealing with
         if level=="S":
             model=entity[0]
@@ -423,8 +429,8 @@ class PPBuilder(_PPBuilder):
                 # To form a peptide bond, N and C must be 
                 # within radius and have the same altloc
                 # identifier or one altloc blank
-                n_altloc=nn.get_altloc()
-                c_altloc=cc.get_altloc()
+                n_altloc=nn.altloc
+                c_altloc=cc.altloc
                 if n_altloc==c_altloc or n_altloc==" " or c_altloc==" ": 
                     if test_dist(nn, cc):
                         # Select the disordered atoms that

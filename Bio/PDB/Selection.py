@@ -55,8 +55,8 @@ def unfold_entities(entity_list, target_level):
     if isinstance(entity_list, Entity) or isinstance(entity_list, Atom):
         entity_list = [entity_list]
 
-    level = entity_list[0].get_level()
-    if not all(entity.get_level() == level for entity in entity_list):
+    level = entity_list[0].entity.level
+    if not all(entity.level == level for entity in entity_list):
         raise PDBException("Entity list is not homogeneous.")
 
     target_index = entity_levels.index(target_level)

@@ -34,7 +34,7 @@ class StructureBuilder(object):
         "Return 1 if all atoms in the residue have a non blank altloc."
         atom_list=residue.get_unpacked_list()
         for atom in atom_list:
-            altloc=atom.get_altloc()
+            altloc=atom.altloc
             if altloc==" ":
                 return 0
         return 1
@@ -126,7 +126,7 @@ class StructureBuilder(object):
                     raise PDBConstructionException(\
                         "Blank altlocs in duplicate residue %s ('%s', %i, '%s')" \
                         % (resname, field, resseq, icode))
-                self.chain.detach_child(res_id)
+                del self.chain[res_id]
                 new_residue=Residue(res_id, resname, self.segid)
                 disordered_residue=DisorderedResidue(res_id)
                 self.chain.add(disordered_residue)
@@ -136,7 +136,8 @@ class StructureBuilder(object):
                 return
         residue=Residue(res_id, resname, self.segid)
         self.chain.add(residue)
-        self.residue=residue   
+        self.residue=residue
+           
     def init_atom(self, name, coord, b_factor, occupancy, altloc, fullname,
                   serial_number=None, element=None):
         """
@@ -164,7 +165,7 @@ class StructureBuilder(object):
         if name in residue:
                 duplicate_atom=residue[name]
                 # atom name with spaces of duplicate atom
-                duplicate_fullname=duplicate_atom.get_fullname()
+                duplicate_fullname=duplicate_atom.fullname
                 if duplicate_fullname!=fullname:
                     # name of current atom now includes spaces
                     name=fullname
@@ -188,7 +189,7 @@ class StructureBuilder(object):
                     # Detach the duplicate atom, and put it in a 
                     # DisorderedAtom object together with the current 
                     # atom.
-                    residue.detach_child(name)
+                    del residue[name]
                     disordered_atom=DisorderedAtom(name)
                     residue.add(disordered_atom)
                     disordered_atom.disordered_add(atom)
@@ -213,15 +214,15 @@ class StructureBuilder(object):
 
     def set_anisou(self, anisou_array):
         "Set anisotropic B factor of current Atom."
-        self.atom.set_anisou(anisou_array)
+        self.atom.anisou = anisou_array
 
     def set_siguij(self, siguij_array):
         "Set standard deviation of anisotropic B factor of current Atom."
-        self.atom.set_siguij(siguij_array)
+        self.atom.siguij = siguij_array
 
     def set_sigatm(self, sigatm_array):
         "Set standard deviation of atom position of current Atom."
-        self.atom.set_sigatm(sigatm_array)
+        self.atom.sigatm = sigatm_array
 
     def get_structure(self):
         "Return the structure."

@@ -22,6 +22,9 @@ _atom_name_dict["C"]=3
 _atom_name_dict["O"]=4
 
 class Atom(object):
+    __slots__ = ('level', 'parent', 'name', 'fullname', 'coord', 'bfactor', 'occupancy', 
+    'altloc', 'full_id', 'id', 'disordered_flag', 'anisou_array', 'siguij_array', 'sigatm_array', 
+    'serial_number', 'xtra', 'element', 'mass')
     def __init__(self, name, coord, bfactor, occupancy, altloc, fullname, serial_number,
                  element=None):
         """
@@ -73,9 +76,10 @@ class Atom(object):
         self.sigatm_array=None
         self.serial_number=serial_number
         # Dictionary that keeps addictional properties
-        self.xtra={}
-        assert not element or element == element.upper(), element
-        self.element = self._assign_element(element)
+        self.xtra=None
+        # Element assignment routines
+        upper = str.upper
+        self.element = self._assign_element(upper(element))
         self.mass = self._assign_atom_mass()
         
     def _assign_element(self, element):
@@ -102,17 +106,14 @@ class Atom(object):
             else:
                 msg = "Could not assign element %r for Atom (name=%s) with given element %r" \
                       % (putative_element, self.name, element)
-                element = ""
+                element = " "
                 warnings.warn(msg, PDBConstructionWarning)
                 
         return element
         
     def _assign_atom_mass(self):
         # Needed for Bio/Struct/Geometry.py C.O.M. function
-        if self.element:
-            return IUPACData.atom_weights[self.element]
-        else:
-            return float('NaN')
+        return IUPACData.atom_weights.get(self.element, float('NaN'))
 
 
     # Special methods   
@@ -163,54 +164,6 @@ class Atom(object):
             # finally, alphabetatically compare names
             return cmp(name1, name2)        
 
-    # set methods
-
-    def set_serial_number(self, n):
-        self.serial_number=n
-
-    def set_bfactor(self, bfactor):
-        self.bfactor=bfactor
-
-    def set_coord(self, coord):
-        self.coord=coord
-
-    def set_altloc(self, altloc):
-        self.altloc=altloc
-
-    def set_occupancy(self, occupancy):
-        self.occupancy=occupancy
-
-    def set_sigatm(self, sigatm_array):
-        """
-        Set standard deviation of atomic parameters.
-
-        The standard deviation of atomic parameters consists
-        of 3 positional, 1 B factor and 1 occupancy standard 
-        deviation.
-
-        @param sigatm_array: standard deviations of atomic parameters.
-        @type sigatm_array: Numeric array (length 5)
-        """
-        self.sigatm_array=sigatm_array
-
-    def set_siguij(self, siguij_array):
-        """
-        Set standard deviations of anisotropic temperature factors.
-
-        @param siguij_array: standard deviations of anisotropic temperature factors.
-        @type siguij_array: Numeric array (length 6)
-        """
-        self.siguij_array=siguij_array
-
-    def set_anisou(self, anisou_array):
-        """
-        Set anisotropic B factor.
-
-        @param anisou_array: anisotropic B factor.
-        @type anisou_array: Numeric array (length 6)
-        """
-        self.anisou_array=anisou_array
-
 
     # Public methods    
 
@@ -225,45 +178,6 @@ class Atom(object):
         "Return the disordered flag (1 if disordered, 0 otherwise)."
         return self.disordered_flag 
 
-    def set_parent(self, parent):
-        """Set the parent residue.
-
-        Arguments:
-        o parent - Residue object
-        """
-        self.parent=parent
-    
-    def detach_parent(self):
-        "Remove reference to parent."
-        self.parent=None
-
-    def get_sigatm(self):
-        "Return standard deviation of atomic parameters."
-        return self.sigatm_array
-
-    def get_siguij(self):
-        "Return standard deviations of anisotropic temperature factors."
-        return self.siguij_array
-
-    def get_anisou(self):
-        "Return anisotropic B factor."
-        return self.anisou_array
-
-    def get_parent(self):
-        "Return parent residue."
-        return self.parent
-
-    def get_serial_number(self):
-        return self.serial_number
-
-    def get_name(self):
-        "Return atom name."
-        return self.name
-
-    def get_id(self):
-        "Return the id of the atom (which is its atom name)."
-        return self.id
-
     def get_full_id(self):
         """Return the full id of the atom.
 
@@ -271,29 +185,6 @@ class Atom(object):
         (structure id, model id, chain id, residue id, atom name, altloc).
         """
         return self.parent.get_full_id()+((self.name, self.altloc),)
-    
-    def get_coord(self):
-        "Return atomic coordinates."
-        return self.coord
-
-    def get_bfactor(self):
-        "Return B factor."
-        return self.bfactor
-
-    def get_occupancy(self):
-        "Return occupancy."
-        return self.occupancy
-
-    def get_fullname(self):
-        "Return the atom name, including leading and trailing spaces."
-        return self.fullname
-
-    def get_altloc(self):
-        "Return alternative location specifier."
-        return self.altloc
-
-    def get_level(self):
-        return self.level
 
     def transform(self, rot, tran):
         """
@@ -329,9 +220,12 @@ class Atom(object):
         """
         # Do a shallow copy then explicitly copy what needs to be deeper.
         shallow = copy.copy(self)
-        shallow.detach_parent()
-        shallow.set_coord(copy.copy(self.get_coord()))
-        shallow.xtra = self.xtra.copy()
+        shallow.parent = None
+        shallow.coord = copy.copy(self.coord)
+        if isinstance(shallow.xtra, dict):
+            shallow.xtra = self.xtra.copy()
+        else:
+            shallow.xtra = None
         return shallow
 
 
@@ -364,9 +258,9 @@ class DisorderedAtom(DisorderedEntityWrapper):
         atom.flag_disorder()
         # set the residue parent of the added atom
         residue=self.parent
-        atom.set_parent(residue)
-        altloc=atom.get_altloc()
-        occupancy=atom.get_occupancy()
+        atom.parent = residue
+        altloc=atom.altloc
+        occupancy=atom.occupancy
         self[altloc]=atom
         if occupancy>self.last_occupancy:
             self.last_occupancy=occupancy

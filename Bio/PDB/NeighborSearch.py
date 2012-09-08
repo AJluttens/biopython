@@ -34,7 +34,7 @@ class NeighborSearch(object):
         """
         self.atom_list=atom_list
         # get the coordinates
-        coord_list = [a.get_coord() for a in atom_list]
+        coord_list = [a.coord for a in atom_list]
         # to Nx3 array of type float
         self.coords=numpy.array(coord_list).astype("f")
         assert(bucket_size>1)
@@ -127,7 +127,7 @@ if __name__=="__main__":
         def __init__(self):
             self.coord=(100*random(3))
 
-        def get_coord(self):
+        def coord(self):
             return self.coord
 
     for i in range(0, 20):

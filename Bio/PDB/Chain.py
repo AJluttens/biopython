@@ -32,7 +32,6 @@ class Chain(Entity):
         return id
             
     # Special methods   
-
     def __getitem__(self, id):
         """Return the residue with given id.
 
@@ -77,7 +76,6 @@ class Chain(Entity):
         return cmp(id1, id2)
 
     # Public methods
-
     def get_unpacked_list(self):
         """Return a list of undisordered residues.
 
@@ -86,27 +84,13 @@ class Chain(Entity):
         ie. it returns a list of simple Residue objects.
         """
         unpacked_list=[]
-        for residue in self.get_list():
+        for residue in self:
             if residue.is_disordered()==2:
                 for dresidue in residue.disordered_get_list():
                     unpacked_list.append(dresidue)
             else:
                 unpacked_list.append(residue)
         return unpacked_list
-
-    # def has_id(self, id):
-    #     """Return 1 if a residue with given id is present.
-    # 
-    #     The id of a residue is (hetero flag, sequence identifier, insertion code).
-    #             If id is an int, it is translated to (" ", id, " ") by the _translate_id
-    #     method.
-    # 
-    #     Arguments:
-    #     o id - (string, int, string) or int
-    #     """
-    #     id=self._translate_id(id)
-    #     return id in self 
-
     
     def _renumber_single_residue(self, old_id, new_id):
         """
@@ -121,7 +105,6 @@ class Chain(Entity):
         self.child_dict[residue.id] = residue
     
     # Public
-
     def get_residues(self):
         for r in self:
             yield r

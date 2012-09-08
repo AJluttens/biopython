@@ -121,7 +121,7 @@ class Fragment(object):
         """
         return self.fid
 
-    def get_coords(self):
+    def coords(self):
         """
         @return: the CA coords in the fragment
         @rtype: Numeric (Nx3) array
@@ -194,7 +194,7 @@ def _make_fragment_list(pp, length):
                 raise PDBException("CHAINBREAK")
             if ca.is_disordered():
                 raise PDBException("CHAINBREAK")
-            ca_coord=ca.get_coord()
+            ca_coord=ca.coord
             f.add_residue(resname, ca_coord)
         frag_list.append(f)
     return frag_list

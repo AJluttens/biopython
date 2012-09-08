@@ -135,6 +135,8 @@ class NACCESS(AbstractResiduePropertyMap):
                     property_dict[(chain_id, res_id)] = item
                     property_keys.append((chain_id, res_id))
                     property_list.append((res, item))
+                    if not isinstance(res.xtra, dict):
+                        res.xtra = {}
                     res.xtra["EXP_NACCESS"]=item
                 else:
                     pass
@@ -165,6 +167,8 @@ class NACCESS_atomic(AbstractAtomPropertyMap):
                         property_dict[full_id]=asa
                         property_keys.append((full_id))
                         property_list.append((atom, asa))
+                        if not isinstance(atom.xtra, dict):
+                            atom.xtra = {}
                         atom.xtra['EXP_NACCESS']=asa
         AbstractAtomPropertyMap.__init__(self, property_dict, property_keys, 
                 property_list)
@@ -180,6 +184,5 @@ if __name__=="__main__":
     model=s[0]
 
     n = NACCESS(model, sys.argv[1])
-    for e in n.get_iterator():
+    for e in n:
         print e
-
